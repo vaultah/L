@@ -1,0 +1,35 @@
+{% extends 'auth/base.html' %}
+
+{% block title %}
+    Password Reset
+{% endblock %}
+
+{% block content %}
+<section class='auth-form'>
+    <div class='generic-L-logo L-auth-logo'>Pwd Reset</div>
+    <div id='auth-messages'>
+        {% for e in errors %}
+            <div class='message error'>{{ e }}</div>
+        {% endfor %}
+    </div>
+
+    <form action='' method='POST'>
+        <input id='pwd' name='pwd'
+               value="{{ POST['pwd']|e if POST['pwd'] else '' }}"
+               type='password' placeholder='Your password' autocomplete='off' maxlength="{{ PWD_LENGTH[1] }}"/>
+        <button id="toggle-pwd" type="button" class='button big-button'>Show Password</button>
+        <input type='submit' value='Change password'
+               class='button big-button green-button'/>
+    </form>
+    <p class='description'>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
+    tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
+    quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+    consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse
+    cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non
+    proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+</section>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+{% endblock %}

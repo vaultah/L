@@ -1,0 +1,5 @@
+{% from 'macros/display-post.html' import display_post with context %}
+{% for post in posts %}
+	{{ display_post(post, current=current, push=push) }}
+{% endfor %}
+

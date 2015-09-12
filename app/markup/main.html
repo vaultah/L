@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+
+{% block title -%}
+	Home - ) {
+{%- endblock %}
+
+
+{% block content %}
+<div class='annouchement-bg' style=''></div>
+<div class='annouchement-content'>
+
+	<div class='annouchement-box'>
+		<div class='annouchement-description'>
+			<h2>We're here to deliver free, fast and cool services</h2>
+		</div>
+
+		<div class='annouchement-logo'></div>
+
+		<div class='annouchement-links-container'>
+			<div class='annouchement-signin annouchement-link'>
+				<a href="/auth/sign-in">Sign in</a>
+			</div>
+			
+			<div class='annouchement-signup annouchement-link'>
+				<a href="/auth/sign-up" title='Only username and password required'>Create an account in at most 10 seconds</a>
+			</div>
+		</div>
+
+		<div class='annouchement-footer'>
+			<p>We're a non-profit team and we're not in control of any commercial organization or politics</p>
+			<p>Some functions may be disabled of work incorrectly, coz' the first offical release is coming this summer.</p>
+		</div>
+	</div>
+
+</div>
+{% endblock %}

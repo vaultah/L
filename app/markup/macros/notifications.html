@@ -1,0 +1,47 @@
+{% macro mention_notification(other) %}
+    <a href='/{{ other.name|e }}'>
+        {{ other.real_name|e if other.real_name else other.name|e }}
+    </a>{{ " " }} has mentioned you in their post!
+{% endmacro %}
+
+
+{% macro reply_post_notification(other) %}
+    <a href='/{{ other.name|e }}'>
+        {{ other.real_name|e if other.real_name else other.name|e }}
+    </a>{{ " " }} has replied to one of your images!
+{% endmacro %}
+
+
+{% macro reply_image_notification(other) %}
+    <a href='/{{ other.name|e }}'>
+        {{ other.real_name|e if other.real_name else other.name|e }}
+    </a>{{ " " }} has replied to one of your posts!
+{% endmacro %}
+
+
+{% macro shared_post_notification(other) %}
+    <a href='/{{ other.name|e }}'>
+        {{ other.real_name|e if other.real_name else other.name|e }}
+    </a>{{ " " }} has shared one of you images!
+{% endmacro %}
+
+
+{% macro shared_image_notification(other) %}
+    <a href='/{{ other.name|e }}'>
+        {{ other.real_name|e if other.real_name else other.name|e }}
+    </a>{{ " " }} has shared one of you posts!
+{% endmacro %}
+
+
+{% macro friend_notification(other) %}
+    <a href='/{{ other.name|e }}'>
+        {{ other.real_name|e if other.real_name else other.name|e }}
+    </a>{{ " " }} is now a friend of yours! Start the talk?
+{% endmacro %}
+
+
+{% macro follower_notification(other) %}
+    <a href='/{{ other.name|e }}'>
+        {{ other.real_name|e if other.real_name else other.name|e }}
+    </a>{{ " " }} now follows you! There gotta be something you want to share.
+{% endmacro %}

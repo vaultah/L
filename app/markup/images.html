@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Your images - ) {
+{% endblock %}
+
+
+{% block content %}
+{% from 'macros/image.html' import uniform_image with context %}
+{% include "regions/left.html" %}
+<ul class='nav-bar'>
+    <li class='mark'>
+        Images
+    </li>
+    <li>
+        <div class='images-upload-dialog green-button button'>Upload pictures</div>
+    </li>
+    <li>
+        <div class='inner-delete-button button'>Delete</div>
+    </li>
+    <li>
+        <div class='confirm-deletion-button thidden'>Delete selected</div>
+    </li>
+</ul>
+
+<div class='images-page-container'>
+    {% if images %}
+        {% for o in images %}
+            {{ uniform_image(o, url=o.url) }}
+        {% endfor %}
+    {% else %}
+        <div class='block'>No images</div>
+    {% endif %}
+</div>
+
+{% include 'regions/right.html' %}
+{% endblock %}
+
+
+{% block footer %}
+<script type="text/javascript">
+ $(document).ready( function() {
+    var images_input = document.getElementById("images-upload"), 
+        del_selecting = false,
+        def_text = $('.inner-delete-button').html(),
+        deletion = new Array,
+        container = $('.images-page-container');
+
+    function _error_text(number) {
+       word = (number == 1) ? 'was' : 'were';
+       text = 'There ' + word + ' ' + number + ' error';
+       if (number != 1) 
+           text += 's';
+       return text;
+    }
+
+    function resize_images () {     
+        container_w = container.width();
+        img_margin = 2;
+        max_imgs = Math.ceil(container_w/(2*img_margin+100));
+        each_w = container_w/max_imgs-2*img_margin; 
+        console.log(container_w, max_imgs, each_w);
+        images = container.find('img');
+        images.css('width', each_w);
+        images.css('height', each_w);
+    }
+
+    resize_images();
+
+    $(window).resize(function(){
+        resize_images();
+    });
+
+    // $('.inner-delete-button').click(function(event) {
+    //     del_selecting = ( del_selecting ) ? false : true;
+    //     console.log(del_selecting);
+    //     if ( del_selecting ) {
+    //         $(this).html('Unselect');
+    //         $('.confirm-deletion-button').show();
+    //     } else {
+    //         $(this).html(def_text);
+    //         $('.confirm-deletion-button').hide();
+    //         del_selecting = false;
+    //         deletion.length = 0;
+    //         console.log(deletion);
+    //         $('.images-page-container div').removeClass('bleached');
+    //     }
+
+    //     $('.images-page-container div').click(function () {
+    //         if ( del_selecting ) {
+    //             id = $(this).attr('image-inner-id');
+    //             console.log(id);
+
+    //             $(this).toggleClass('bleached')
+
+    //             if ( !$(this).hasClass('bleached') ) {
+    //                 index = deletion.indexOf(id);
+    //                 deletion.splice(index, 1);
+    //                 console.log(deletion);  
+    //             } else {
+    //                 deletion.push(Number(id));
+    //                 console.log(deletion);  
+    //             }
+
+
+    //         }
+
+    //     });
+    // });
+
+    // $('.confirm-deletion-button').click(function () {
+
+    //     if ( deletion.length > 0) {
+    //         $.ajax({
+    //             url: lenv.AjaxRequests+'/images/delete',
+    //             method: 'POST',
+    //             data: { ids: JSON.stringify(deletion) },
+    //             dataType: 'json',
+    //             success: function (data) {
+    //                 console.log(data);
+    //                 for (var i = deletion.length - 1; i >= 0; i--) {
+    //                     console.log(deletion[i]);
+    //                     selector = 'div#uploaded-image-'+deletion[i]
+    //                     $(selector).remove();
+    //                     if ( $('.images-page-container').html().trim().length == 0 ) {
+    //                         console.log('Last');
+    //                         $('.images-page-container').html("<div class='block'>No images</div>");
+    //                     } else {
+
+    //                     }
+    //                 }
+    //             }
+    //     });
+    //     }   
+    // });
+
+
+ // Plain XHR upload
+
+});
+</script>
+{% endblock %}
+

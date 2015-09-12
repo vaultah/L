@@ -1,0 +1,5 @@
+{% macro uniform_image(object, url, width=100, height=100) %}
+<div item-id='{{ object.id }}' type='{{ CONTENT_TYPES.image }}' class="displayable">
+    <img src='{{ url }}' width='{{ width }}' height='{{ height }}' alt />
+</div>
+{% endmacro %}

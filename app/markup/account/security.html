@@ -1,0 +1,91 @@
+{% extends 'account/layout.html' %}
+
+
+{% block nav %}
+<nav>
+    <ul class='nav-bar'>
+        <li class='mark'>
+            Account{{ " > " }}Security
+        </li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block account_content %}
+
+<script type="text/javascript" language="javascript">function togglePassword(){var a=document.getElementById("new-password"),b=document.getElementById("account-toggle-password-button");"password"==a.type?(a.type="text",b.value="Hide Password"):(a.type="password",b.value="Show Password")};</script>
+<form method="post" name="account-security" action="">
+
+<div class="account-field-block">
+	<div class="account-field-line">
+		<label>
+			<div class="field-description">Your email address:</div>
+			<input type="text" id="update-email" value="{{ current_profile.email|e if current_profile.email else '' }}" class="account-field"/>
+		</label>
+	</div>
+
+	<span class='hint' id='email-update-hint'>Now we're showing your current email</span>
+
+</div>
+
+<div class="account-field-block">
+	<div class="account-field-line">If you don't want to change your password now, just leave the folowing fields blank</div>
+	
+	<div class="account-field-line">
+		<label>
+			<div class="field-description">Type here your old password:</div>
+			<input type="password" id='old-password' name="old-password" value='' class="account-field" maxlength='{{ PWD_LENGTH[1] }}'/>
+		</label>
+	</div>
+		
+	<div class="account-field-line">
+		<label>
+			<div class="field-description">Type here your new password:</div>
+			<input type="password" id='new-password' name="new-assword" value='' id="acc-new-pass-field" class="account-field" maxlength='{{ PWD_LENGTH[1] }}'/>
+		</label>
+	</div>
+
+	<div class='password-change-bar action-bar'>
+		<span class='hint' id='password-change-hint'>Your password need to contain at least {{ PWD_LENGTH[0] }} characters</span>
+		<input id="account-toggle-password-button" class=' button' type="button" onclick="togglePassword()" value="Show Password">
+		<input id='change-pass-button' class=' green-button button' type='button' value='Change my password!'/>
+	</div>
+	
+</div>
+
+</form>
+{% endblock %}
+
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+$(document).ready(function(){
+	$('#change-pass-button').click(function (){
+		old_pwd = $('#old-password').val();
+		new_pwd = $('#new-password').val();
+		$.ajax({
+			url: lenv.AjaxRequests + '/security-settings/password',
+			data: { 'old-pwd': old_pwd, 'new-pwd': new_pwd },
+			type: 'post',
+			success: function(data) {
+				$("#password-change-hint").html(data.response);
+			}   
+			
+		});
+	});
+
+	$('#update-email').change(function (){
+		email_val = $(this).val();
+		$.ajax({
+			url: lenv.AjaxRequests + '/security-settings/email',
+			data: { email: email_val },
+			type: 'post',
+			success: function(data) {
+				$("#email-update-hint").html(data.response);
+			}   
+			
+		});
+	});
+});
+</script>
+{% endblock %}

@@ -1,0 +1,349 @@
+{% extends 'base.html' %}
+
+{% block title -%}
+{{ page_profile.real_name|e if page_profile.real_name else page_profile.name|e }}
+ ({{ page_profile.name|e }}) - ) {
+{%- endblock %}
+
+
+{% block content %}
+<nav>
+    <ul class='nav-bar'>
+        <li class='mark'>
+            {{ page_profile.real_name|e if page_profile.real_name else page_profile.name|e }}
+        </li>
+
+        {% if loggedin and page_record != current.record %}
+
+            {% if not relations.is_blocked and not relations.has_blocked %}
+
+                {% if relations.are_friends %}
+                    <li>
+                        <div class='unfollow button ' name="{{ page_profile.name }}">
+                            Friend
+                        </div>
+                    </li>
+                {% elif relations.following %}
+                    <li>
+                        <div class='unfollow button ' name="{{ page_profile.name }}">
+                            Unfollow
+                        </div>
+                    </li>
+                {% else %}
+                    <li>
+                        <div class='follow button ' name="{{ page_profile.name }}">
+                            Follow
+                        </div>
+                    </li>
+                {% endif %}
+
+
+            {% elif relations.is_blocked and relations.has_blocked %}
+                <li>
+                    <div class='unblock button ' name="{{ page_profile.name }}">
+                        Mutual block
+                    </div>
+                </li>
+            {% elif relations.has_blocked %}
+                <li>
+                    <div class='unblock button ' name="{{ page_profile.name }}">
+                        Blocked
+                    </div>
+                </li>
+            {% else %}
+                <li>
+                    <div class='block button' name="{{ page_profile.name }}">
+                        Blocked you
+                    </div>
+                </li>
+            {% endif %}    
+        {% endif %}
+
+    </ul>
+</nav>
+{% from 'macros/display-post.html' import display_post with context %}
+{% include 'regions/profile/left.html' %}
+<section class='page'>
+    {% if page_profile.cover %}
+    <div class='cover-picture-container'>
+
+        <div class='cover-picture'>
+            <img id='profile-cover-photo' src="{{ page_profile.cover or '' }}" alt />
+        </div>
+        {% if loggedin and current.record == page_record %}
+        <div class='cover-photo-action-bar'>
+            <div id='unpin-cover-photo' class='cover-actions' title='Hide cover photo'>Unpin</div>
+            <div id='change-cover-photo' class='cover-actions' title='Change cover photo'>Change</div>
+        </div>
+        {% endif %} 
+        
+    </div>
+    {% endif %}
+
+    <div class='posts'>
+        {% if fixed_post %}
+            {{ display_post(fixed_post[0], current=current, fixed=True,
+                item_classes=['fixed-post']) }}
+        {% endif %}
+    
+        
+        {% if page_posts %}
+            {%- for post in page_posts -%}
+                {{ display_post(post, current=current) }}
+            {%- endfor -%}
+        {% else %}
+            <div class='block'>This person doesn't have any posts yet</div>
+        {% endif %}
+    </div>
+</section>
+
+{% if loggedin and current.record == page_record %}
+<div id='change-cover-photo-box' class='overlay thidden'>
+    <div class='overlay-shadow'></div>
+    <div class='overlay change-buttons-container'>
+        <div class='overlay-title'>Choose a cover photo</div>
+        <div class='overlay-content'>
+            <div class='change-buttons-content'></div>
+            <div class='change-cover-bottom'></div>
+        </div>
+        <div class='overlay-hint'>Click on the dark zone to close</div>
+    </div>
+
+</div>
+{% endif %} 
+
+{% include 'regions/profile/right.html' %}
+{% endblock %}
+
+
+{% block footer %}
+<script type="text/javascript">
+'use strict';
+/* Public information */
+lenv.Profile = {'Name': "{{ page_profile.name|e }}",
+                'Picture': "{{ page_profile.avatar.raw or '' }}"};
+
+$(document).ready(function() {
+
+    // View larger profile picture by clicking on zoom button
+
+    $('.pic-zoom').click(function() {
+        
+        // Only if profile picture is defined
+
+        if (lenv.Profile.Picture) {
+            $('#full-screen-container').show(50);
+            $('#profile-avatar').trigger('click');
+        }
+    });
+
+
+
+    $('.pictures-container div:not(:last-child)').click(function () {
+
+        $('#full-screen-container').show(50);
+
+        image_id = $(this).attr('image-inner-id');
+        $.ajax({
+            url: lenv.xhr + '/images/load?id='+image_id,
+            success: function(data) {
+                console.log(data)
+                $('#fs-image-container').FullScreenImage(data.output.image.dimensions, data.output.image.url.large, function(){
+                    console.log('Large picture displayed');
+                });
+            }
+        });
+
+    });
+    /*   If user is logged in and viewing his own profile page he can
+     change a cover photo directly from profile page */
+
+    $('.cover-picture-container').hover(function(){
+        $('.cover-photo-action-bar').fadeIn(150);
+    }, function(){
+        $('.cover-photo-action-bar').fadeOut(150);
+    });
+
+    // Profile picture overlay
+    $(".profile-pic").hover(function() {
+        $(this).find("div.profile-pic-overlay").stop(false,true).fadeIn(150);
+    },
+    function() {
+        $(this).find("div.profile-pic-overlay").stop(false,true).fadeOut(150);
+    });
+
+
+    // If user is logged in and viewing his own profile page he can 
+    // post instantly
+
+    
+
+
+    $('.unpin-cover-photo').click(function(){
+     $.ajax({
+         url: lenv.xhr + '/images/hide_cover',
+         success: function(){
+             $('.cover-picture').empty();
+         }
+     });
+    });
+
+    $('#change-cover-photo').click(function(){
+        $('#change-cover-photo-box').show(50);
+        lenv.images.load({number: 15, type: 'thumb'}, function(data) {
+            console.log(data);
+            $('.change-buttons-content').html(data.output.html);
+
+            // Class of an element loaded by the ajax request
+            $('.change-buttons-content div').click(function () {
+                id = $(this).attr('image-inner-id');
+                $.ajax({
+                    url: lenv.xhr+'/images/upload?set=cover&id=' + id,
+                    success: function(data) {
+                        console.log(data);
+                        if (data.success) {
+                            $('#change-cover-photo-box').hide();
+                            $('#profile-cover-photo').attr('src', data.output.link);
+                        }
+                    }
+                });
+            });
+        });
+    });
+
+    //
+    // Load more posts
+    // 
+
+    var loading = false;
+    
+    $(window).scroll(function() {
+        var h = $('.posts').height(),
+            st = $(window).scrollTop(),
+            start_id = $(".page-post:last").attr("post-id");
+        if(st >= 0.7 * h && !loading && h > 500){
+            loading = true;
+            lenv.posts.load({start: start_id, page: lenv.Profile.Name}, function(data) {
+                $(".posts").append(data.output.html);
+                loading = false;
+            });
+        }
+    });
+
+    /*  
+        RELATIONS BETWEEN USERS
+    */
+
+    $(document).on("click", '.follow-button', function(e) {
+        var thiz = $(this),
+            name = thiz.attr('name');
+        $.ajax({
+            url: lenv.xhr+'/relations/follow?name=' + name,
+            success: function(data) {
+                console.log(data);
+                if (data.success) {
+                    thiz.removeClass('follow-button')
+                    thiz.addClass('unfollow-button');
+                    thiz.html('Unfollow');
+                    return false;
+                    // voila! Button is totally different now
+                }
+            }
+        });
+    });
+
+    $(document).on("click", '.unfollow-button', function(e) {
+        var thiz = $(this),
+            name = thiz.attr('name');
+        $.ajax({
+            url: lenv.xhr + '/relations/unfollow?name=' + name,
+            success: function(data) {
+                console.log(data);
+                if (data.success) {
+                    thiz.removeClass('unfollow-button')
+                    thiz.addClass('follow-button');
+                    thiz.html('Follow');
+                    return false;
+                }
+            }
+        });
+        
+    });
+
+    $(document).on("click", '.add-friend-button', function (e) {
+        var thiz = $(this),
+            name = thiz.attr('name');
+        $.ajax({
+            url: lenv.xhr + '/relations/friend?name=' +  name,
+            success: function(data) {
+                console.log(data);
+                if (data.success) {
+                    thiz.removeClass('add-friend-button');
+                    if (data.output.request) {
+                        thiz.addClass('cancel-request-button');
+                        thiz.html('Cancel request');
+                    } else if (data.output.friends) {
+                        thiz.addClass('unfriend');
+                        thiz.html('Remove from friends');
+                    }
+                    return false;
+                }
+            }
+        });
+    });
+
+    $(document).on("click", '.cancel-request-button', function (e) {
+        var thiz = $(this),
+            name = thiz.attr('name');
+        $.ajax({
+            url: lenv.xhr+'/relations/cancel?name=' +  name,
+            success: function(data) {
+                console.log(data);
+                if (data.success) {
+                    thiz.removeClass('cancel-request-button');
+                    thiz.addClass('add-friend-button');
+                    thiz.html('Add to friends');
+                    return false;
+                }
+            }
+        });
+    });
+
+    $(document).on("click", '.confirm-friends-button', function (e) {
+        var thiz = $(this),
+            name = thiz.attr('name');
+        $.ajax({
+            url: lenv.xhr+'/relations/confirm?name='+ name,
+            success: function(data) {
+                console.log(data);
+                if (data.success) {
+                    thiz.attr('class', 'unfriend');
+                    thiz.html('Remove from friends');
+                    return false;
+                }
+            }
+        });
+    });
+
+    $(document).on('click', '.unfriend', function (e) {
+        var thiz = $(this),
+            name = thiz.attr('name');
+        $.ajax({
+            url: lenv.xhr+'/relations/unfriend?name='+ name,
+            success: function(data) {
+                console.log(data);
+                if (data.success) {
+                    thiz.removeClass('unfriend');
+                    thiz.addClass('add-friend-button');
+                    thiz.html('Add to friends');
+                    return false;
+                }
+            }
+        });
+    });
+
+});
+</script>
+{% endblock %}
+
+<!-- __fine___ -->

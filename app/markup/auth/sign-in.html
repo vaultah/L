@@ -1,0 +1,61 @@
+{% extends 'auth/base.html' %}
+
+{% block title %}
+    Sign In
+{% endblock %}
+
+{% block content %}
+<section class='auth-form'>
+    <div class=' generic-L-logo L-auth-logo'>Sign In</div>
+    {% for e in errors %}
+        <div class='message error'>{{ e }}</div>
+    {% endfor %}
+    
+    <form action='' method='POST'>
+        {% if switch %}
+            <input name='name' value="{{ switch|e if switch else '' }}" placeholder='Your name' maxlength="{{ USR_LENGTH[1] }}" />
+        {% else %}
+            <input name='name' value="{{ POST['name']|e if POST['name'] else '' }}" placeholder='Your name' maxlength="{{ USR_LENGTH[1] }}" />
+        {% endif %}
+        <input id='pwd' name='pwd' value="{{ POST['pwd']|e if POST['pwd'] else '' }}" type='password' placeholder='Your password' autocomplete='off' maxlength="{{ PWD_LENGTH[1] }}"/>
+        <div class="remember-switch">
+            <label class="cb-enable selected">
+                <span>Keep me in for {{ " " }}<b>2 weeks</b></span>
+            </label>
+            <label class="cb-disable">
+                <span>Only for {{ " " }}<b>4 hours</b></span>
+            </label>
+            <input type="checkbox" name="remember" id='cb-remember' {{ 'checked="checked"' if not POST }}{{'checked="checked"' if POST and POST['remember']}} />
+        </div>
+        <input type='submit' value='Sign In' class='button big-button green-button'/>
+    </form>
+    <p class='description'>
+        Don't have an account yet? {{ " " }} <a href='/auth/sign-up'><b>Sign up</b></a>, it's free and shouldn't take more than 10 seconds!
+        <br/>
+        FYI you can {{ " " }} <a href='/auth/reset'><b>reset your password</b></a> {{ " " }} whenever you want.
+        </p>
+</section>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" language="javascript">
+        $(document).ready(function() {
+            $(".cb-enable").click(function() {
+                var a = $(this).parents(".remember-switch");
+                $(".cb-disable", a).removeClass("selected");
+                $(this).addClass("selected");
+                $("#cb-remember", a).attr("checked", !0)
+            });
+            $(".cb-disable").click(function() {
+                var a = $(this).parents(".remember-switch");
+                $(".cb-enable", a).removeClass("selected");
+                $(this).addClass("selected");
+                $("#cb-remember", a).attr("checked", !1)
+            });
+            $("#cb-remember").attr("checked") ? ($(".cb-disable").removeClass("selected"), $(".cb-enable").addClass("selected")) :
+                ($(".cb-disable").addClass("selected"), $(".cb-enable").removeClass("selected"))
+        });
+    </script>
+
+{% endblock %}

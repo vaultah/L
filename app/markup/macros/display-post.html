@@ -1,0 +1,80 @@
+{% macro display_post(post, current=None, fixed=False, item_classes=[], attachments=True, push=False) %}
+
+{% if post.images or post.content %}
+<div class="post-container {{ ' ' + item_classes|join(' ') }}" id='post-{{ post.id }}' post-id='{{ post.id }}'> 
+    {% if post.base and 'small-post' not in item_classes %}
+        <div class="post-link"></div>
+    {% endif %}
+
+    <div class='avatar'>
+        <a class='picture-link' href="/{{ post.profile.name|e }}">
+            <img src="{{ post.profile.avatar.avatar or DEFAULT_AVATAR }}" width='70' height='70' alt />
+        </a>
+    </div>
+
+    <div class='item-header'>
+        <span class='name'>
+            <strong>
+                <a href="/{{ post.profile.name|e }}">
+                    {{ post.profile.real_name|e if post.profile.real_name else post.profile.name|e }}
+                </a>
+            </strong>
+            {{ ' ' }}
+            <a href="/{{ post.profile.name|e }}">{{ post.profile.name|e }}</a>
+        </span>
+    </div>
+
+    <div class='post-content'>
+        {% if post.content %}
+            <p class='item-text post-text'>{{ post.content }}</p>
+        {% endif %}
+
+        {%- if post.images and attachments and 'small-post' not in item_classes -%}
+        <div class="attachments">
+            {%- for object, url in post.images  -%}
+                <div class="attachment displayable" type="{{ CONTENT_TYPES.image }}" item-id="{{ object.id }}">
+                    <img src="{{ url }}"/>
+                </div>
+            {%- endfor -%}
+        </div>
+        {%- endif -%}
+
+        <div class='post-row'>
+            <div class='gray-small' title="{{ post.time }}">
+                {{ post['passed'] }}
+            </div>
+
+            <div class='right-part'>
+                <ul class='item-actions'>
+                <!-- FIXMEEEEEH -->
+                    <li class='post-action-icon vote-button' action='upvote' bound='upvote' post-id='{{ post.id }}'>Upvote</li>
+                    <li>{{ post.score }}</li>
+                    <li class='post-action-icon vote-button' action='downvote' bound='downvote' post-id='{{ post.id }}'>Downvote</li>
+                    <li class='post-action-icon share-post-button' title='Share this on your wall' post-id='{{ post.id }}'>Share</li>
+                    <li class='post-action-icon reply-to-post-button' title='Share this on your wall' post-id='{{ post.id }}'>Reply</li>
+                    {% if fixed %}
+                        {% if current.loggedin and post.owner == current.record %} 
+                            <li class='post-action-icon unfix-post-button' title='Unfix this from your wall' post-id='{{ post.id }}'>Fixed</li>
+                        {% else %}
+                            <li class='post-action-icon fixed-post-button' title='This post is fixed' post-id='{{ post.id }}'>Fixed</li>
+                        {% endif %}
+                    {% else %}
+                        <li class='post-action-icon fix-post-button' title='Fix this on your wall' post-id='{{ post.id }}'>Fix</li>
+                    {% endif %}
+
+                    {% if not push and current.loggedin and post.owner == current.record %}
+                        <li class='post-action-icon delete-post-button' title='Delete it' post-id='{{ post.id }}'>Delete</li>
+                    {% else %}
+                        <li class='post-action-icon flag-post-button' title='Flag it as spam' post-id='{{ post.id }}'>Spam</li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% if post.base and post.base is not sequence %}
+    {{ display_post(post.base, current, item_classes=['small-post'], attachments=False, push=push) }}
+{% endif %}
+
+{% endmacro %}

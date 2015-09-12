@@ -1,0 +1,15 @@
+<!-- TODO -->
+<nav class='left-nav'>
+    <ul class='pages'>
+        {% if loggedin and current_notifications %}
+            <li class='notifications' id='show-noto'>
+                {{ '{:02}'.format(current_notifications|length) }}
+            </li>
+        {% endif %}
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li class='link-to-top' title='Go to top'></li>
+    </ul>
+</nav>

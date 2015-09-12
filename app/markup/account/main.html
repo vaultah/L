@@ -1,0 +1,12 @@
+{% extends 'account/layout.html' %}
+
+{% block title %}Account details - ) {% endblock %}
+
+
+{% block account_content %}
+<div class='account-field-block'>
+	<div class="account-field-line">
+		Your name is {{ " " }} <a href='/{{ current.record.name|e }}'>{{ current.record.name|e }}</a>
+	</div>
+</div>
+{% endblock %}

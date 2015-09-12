@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}People - ) {% endblock %}
+
+{% block content %}
+<div class='nav-bar'>
+    <ul class='nav-bar'>
+        <li class='mark'>People</li>
+    </ul>
+</div>
+
+{% for person in people %}
+<div class='post-container listing-item'>
+    <div class='thumb-60 avatar-wrap avatar'>
+        <a class='picture-link' href="/{{ person.name|e }}">
+            <img class='avatar' src="{{ person.profile.avatar.thumb or DEFAULT_AVATAR }}" width='60' height='60' alt />
+        </a>
+    </div>
+
+    <div class='post-content'>
+        <div class='item-header'>
+
+            <span class='gray-bold'>
+                <a href="/{{ person.name|e }}">
+                    {{ person.profile.real_name|e if person.profile.real_name else person.name|e }}
+                </a>
+            </span>
+
+            <span class='profile-username'>                             
+                <a href="/{{ person.name|e }}">{{ person.name|e }}</a>
+            </span>
+
+        </div>
+        <div class='account-description'>
+            {% if person.profile.country %}
+                Location: <span>{{ person.profile.country.full|e }}</span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% include 'regions/right.html' %}
+{% endblock %}

@@ -1,0 +1,62 @@
+<header>
+    <a href='/'>
+        <div class='L-logo generic-L-logo'>L</div>
+    </a>
+
+    <ul id='wrap-left' class='wrap'>
+    {%- if loggedin -%}
+        <li class='current-account'  title='Your current account'>
+            <a href="/{{ current.record.name|e }}">
+                <div class='avatar small-profile-picture'>
+                    <img src="{{ current_profile.avatar.thumb or DEFAULT_AVATAR }}"/>
+                </div>
+                <span class='fdl'>{{ current.record.name|e }}</span>
+            </a>
+        </li>
+        {% if current.multi %}
+            {% for a in current.records %}
+                {% if a != current.record %}
+                <li title='Click to use {{ " " }}{{ a.name }}'>
+                    <a href="/?switch={{ a.name }}">
+                        <div class="avatar small-profile-picture">
+                            <img src="{{ a.profile.avatar.thumb or DEFAULT_AVATAR }}" />
+                        </div>
+                    </a>
+                </li>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </ul>
+        
+    {%- endif -%}
+    <ul id='wrap-right' class='wrap'>
+        
+        {% if loggedin %}
+        <li class="new-post" title='New post'>
+            <div id='show-gnpo' class="new-post-button">
+                <span class='fdl'>New post</span>
+            </div>  
+        </li>
+        {% endif %}
+
+        {% if loggedin %} 
+        <li title='Your account settings and preferences'>
+            <a href="/account">
+                <span class='fdl'>My settings</span>
+            </a>
+        </li>
+
+        <li id='hy'>
+            <a href="/auth/sign-out">
+                <span class='fdl'>Sign out</span>
+            </a>
+        </li>
+        {% else %}
+        <li>
+            <a href="/auth/sign-in">
+                <span class='fdl'>Sign in{{ " " }}<strong>&amp;</strong>{{ " " }}Sign up</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</header>

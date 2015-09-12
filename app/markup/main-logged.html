@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+
+{% block title %}
+    Home - ) {
+{% endblock %}
+
+
+{% block footer %}
+
+{% endblock %}
+
+
+{% block content %}
+{% from 'macros/display-post.html' import display_post with context %}
+<nav>
+    <ul class='nav-bar'>
+        <a href="#">
+            <li class='mark'>
+                Feed
+            </li>
+        </a>
+    </ul>
+</nav>
+<div class="feed posts">
+    {% if feed %}
+        {% for x in feed %}
+            {{ display_post(x, current) }}
+        {% endfor %}
+    {% else %}
+        <div class='block'>Your news feed is empty now :(</div>
+    {% endif %}
+</div>
+{% include 'regions/right.html' %}
+{% endblock %}
+

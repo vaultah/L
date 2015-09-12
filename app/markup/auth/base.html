@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block js %}
+	{{ super() }}
+	<script type="text/javascript">
+        var pwd_field = $('#pwd'),
+            toggle_pwd = $('#toggle-pwd'); 
+        toggle_pwd.click(function () {
+            if (pwd_field.attr('type') === 'password') {
+                pwd_field.attr('type', 'text');
+                toggle_pwd.text("Hide Password");
+            } else {
+                pwd_field.attr('type', 'password');
+                toggle_pwd.text("Show Password");
+            }
+        });
+
+	</script>
+{% endblock %}

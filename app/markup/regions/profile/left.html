@@ -1,0 +1,61 @@
+<section class='profile-information'>
+    
+    {% include 'regions/profile/left/picture.html' %}
+    {% from 'macros/image.html' import uniform_image with context %}
+
+    <div class='information'>
+        <ul class='info main'>
+            {% if page_profile.country %}
+            <li>
+                Location:{{ " " }} <span><b>{{ page_profile.country_name|e }}</b></span>
+            </li>
+            {% endif %}
+
+            {% if page_profile.website %}
+            <li>
+                Website:{{ " " }}
+                <span title="{{ page_profile.website|e }}" class="site-text">
+                    <b>
+                        <a target="_blank" href="{{ page_profile.website_link|e }}">{{ page_profile.website|e }}</a>
+                    </b>
+                </span>
+            </li>
+            {% endif %}
+        </ul>
+
+        <ul class='info counters'>
+            {% for counter in ('followers', 'friends', 'posts', 'images') %}
+                {% if page_record[counter] %}
+                    <li>
+                        <b>{{ page_record[counter] }}</b>{{ " " }} {{ counter if page_record[counter] > 1 else counter[:-1] }}
+                    </li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div class="page-pictures">
+        <div class='pictures-container'>
+            <div>
+                {% for image in page_images[:5] %}
+                    {{ uniform_image(image, image.url) }}
+                {% endfor %}
+            </div>
+
+            <div>
+                {% for image in page_images[5:9] %}
+                    {{ uniform_image(image, image.url) }}
+                {% endfor %}
+
+                {% if page_images|count > 10 %}
+                <a href="#">
+                    <div class='view-all'>
+                        {{ uniform_image(page_images[10], page_images[10].url) }}
+                        <span>ALL</span>
+                    </div>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>

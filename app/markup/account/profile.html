@@ -1,0 +1,198 @@
+{% extends 'account/layout.html' %}
+{% block title %}Profile settings - {% endblock %}
+
+{% block nav %}
+<nav>
+    <ul class='nav-bar'>
+        <li class='mark'>
+            Account{{ " > " }}Profile
+        </li>
+    </ul>
+</nav>
+{% endblock %}
+
+{% block account_content %}
+
+<div class='account-field-block'>
+
+    <div class="account-field-line">
+        <label>
+            <div class="field-description">Change username:</div>
+            <input type='text' value="{{ current.record.name|e }}" name='change-username' id='change-username-field' class="account-field" maxlength='{{ USR_LENGTH[1] }}'/>
+        </label>
+    </div>
+
+    <div class='hint' id='change-username-hint'>{{ L_HOST }}/{{ current.record.name|e }}</div>
+
+</div>
+
+<div class='account-field-block'>
+
+    <div class="account-field-line">
+        <label>
+            <div class="field-description">Type here your real name:</div>
+            <input type="text" name="real_name" value="{{ current_profile.real_name|e 
+                                                            if current_profile.real_name else ''
+                                                             }}" id="profile-settings-real-name-field" class="account-field" maxlength='{{ NAME_MAXLENGTH }}'/>
+        </label>
+    </div>
+
+    <div class='hint' id='real-name-hint'>People will recognize you by your real name. It'll appear on your profile page</div>
+
+</div>
+
+<div class='account-field-block'>
+    <div class="account-field-line">
+        <div class="field-description">Choose your country:</div>
+
+        <select name="country" class='dropdown-select-account' id='country-settings-dropdown'> 
+            {% for code, desc in countries.items() %}
+                <option value='{{ code|e }}' {{ 'selected="selected"' if code == current_profile.country }}>
+                    {{ desc|e }}
+                </option>
+            {% endfor %}
+        </select>
+
+    </div>
+
+    <div class='hint' id='country-hint'>That's not required field, so you can skip it for better privacy</div>
+
+</div>
+
+<div class='account-field-block'>
+    <div class="account-field-line">
+        <label>
+
+            <div class="field-description">Change your profile picture:</div>
+    
+            <form method="post" enctype="multipart/form-data">
+                <input type='file' name='profile_images' id='avatar-input'/>
+                <input type='submit' id='upload-cover-photo' class='nojs-only'/>
+            </form>
+    
+        </label>
+    </div>
+
+    <div class='hint' id='profile-photo-upload-hint'>Upload a profile photo. Everybody will be able to see it.</div>
+
+</div>
+
+
+<div class='account-field-block'>
+    <div class="account-field-line">
+        <label>
+            <div class="field-description">Change your cover picture:</div>
+
+            <form method="post" enctype="multipart/form-data" id='upload-cover-photo-form'>
+                <input type='file' name='images' id='cover-input' />
+                <input type='submit' id='upload-cover-photo' class='nojs-only'/>
+            </form>
+
+        </label>
+    </div>
+
+    <div class='hint' id='cover-photo-upload-hint'>Upload a cover photo. People will see it <strong>above the posts</strong> on your page.</div>
+
+</div>
+
+<div class='account-field-block'>
+    <div class="account-field-line">
+        <label>
+
+            <div class="field-description">Your website:</div>
+            <input type='text' value="{{ current_profile.website.text|e if current_profile.website else '' }}" placeholder='' name='website' id='profile-settings-change-website' class="account-field" maxlength='{{ WEBSITE_LENGTH[1] }}'/>
+
+        </label>
+    </div>
+
+    <div class='hint' id='save-website-hint'><strong>Do not</strong> type here the links to your pages on Facebook or Twitter. Better place them to the <strong><a href='/account/social'>Social media</a></strong> section.</div>
+
+</div>
+{% endblock %}
+
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+$(document).ready( function(){
+    var cover_input = document.getElementById("cover-input"),
+        profile_input = document.getElementById("avatar-input"); 
+
+    // Change real name
+
+    $("#profile-settings-real-name-field").change(function(){
+        lenv.account_data.update({
+           'real_name': $(this).val()
+        }, function(data) {
+            $("#real-name-hint").html(data.response);    
+        });
+    });
+
+    // Save country
+
+    $("#country-settings-dropdown").change(function() {
+        lenv.account_data.update({
+           'country': $(this).val()
+        }, function(data) {
+            $("#country-hint").html(data.response);    
+        });
+    });
+
+    // Change username
+
+    $("#change-username-field").change(function() {
+        lenv.account_data.update({
+           'name': $(this).val()
+        }, function(data) {
+            console.log(data);
+            $("#change-username-hint").html(data.response);    
+        });
+        
+    });
+
+    // Save website
+
+    $("#profile-settings-change-website").change(function() {
+        lenv.account_data.update({
+           'website': $(this).val()
+        }, function(data) {
+            console.log(data);
+            $("#save-website-hint").html(data.response);    
+        });
+    });
+
+    
+    cover_input.addEventListener("change", function() {
+
+        if (this.files.length != 1) {
+            $('#cover-photo-upload-hint').html('Select exatly one file');
+            return;
+        }
+        lenv.images.upload({files: this.files, set: 'cover'}, function(data){
+            if ( data.success == 1 ) {
+                $('#cover-photo-upload-hint').html(data.response);
+            } else {
+                $('#cover-photo-upload-hint').html('Something went wrong');
+            }
+
+            $(cover_input).val('');
+        });
+
+    }, false);
+
+    profile_input.addEventListener("change", function() {
+        if (this.files.length != 1) {
+            $('#profile-photo-upload-hint').html('Select exactly one image');
+            return;
+        }
+        lenv.images.upload({files: this.files, set: 'avatar'}, function(data) {
+            if ( data.success == 1 ) {
+                $('#profile-photo-upload-hint').html(data.response);
+            } else {
+                $('#profile-photo-upload-hint').html('Something went wrong');
+            }
+            $( profile_input ).val('');
+        });
+    }, false);
+
+}); </script>
+{% endblock %}

@@ -1,0 +1,51 @@
+{% extends 'auth/base.html' %}
+
+{% block title %}
+    Sign Up
+{% endblock %}
+
+{% block content %}
+<section class='auth-form'>
+    <div class='generic-L-logo L-auth-logo'>Sign Up</div>
+    <div id='auth-messages'>
+        {% for e in errors %}
+            <div class='message error'>{{ e }}</div>
+        {% endfor %}
+    </div>
+
+    <form action='' method='POST'>
+        {% if switch %}
+            <input name='name' value="{{ switch|e if switch else '' }}" placeholder='Your name' maxlength="{{ USR_LENGTH[1] }}" />
+        {% else %}
+            <input name='name' id='auth-name' value="{{ POST['name']|e if POST['name'] else '' }}" placeholder='Your name' maxlength="{{ USR_LENGTH[1] }}" />
+        {% endif %}
+        <input id='pwd' name='pwd' value="{{ POST['pwd']|e if POST['pwd'] else '' }}" type='password' placeholder='Your password' autocomplete='off' maxlength="{{ PWD_LENGTH[1] }}"/>
+        <button id="toggle-pwd" type="button" class='button big-button'>Show Password</button>
+        <input type='submit' value='Sign Up' class='button big-button green-button'/>
+    </form>
+    <p class='description'>Already a member? You'd {{ " " }} <a href='/auth/sign-in'><b>sign in</b></a> {{ " " }} now!        <br/>
+        FYI you can {{ " " }} <a href='/auth/reset'><b>reset your password</b></a> {{ " " }} whenever you want.</p>
+
+</section>
+{% endblock %}
+
+{% block js %}
+    {{ super() }}
+    <script type="text/javascript" language="javascript">
+        $("#auth-name").change(function(){
+            lenv.account_data.get(
+                {'name': $(this).val()},
+                function(data) {
+                    if (data.record) {
+                        var e = $('<div>', {
+                                'id': 'name-check',
+                                'class': 'message error',
+                                'text': 'This name is already taken'
+                            });
+                        $('#auth-messages').append(e);
+                    } else $('#name-check').remove();
+            });
+            
+        });
+    </script>
+{% endblock %}

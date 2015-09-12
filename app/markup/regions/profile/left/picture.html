@@ -1,0 +1,17 @@
+<div class='pic-container'>
+    <div class='pic-frame'>
+        <div class='profile-pic'>
+            <div class='profile-pic-overlay thidden'>
+                <div class='pic-zoom' title='View largest available image'>
+                    <div class='pic-zoom-image'></div>
+                </div>
+            </div>
+            <div class="avatar">
+                <img src="{{ page_profile.avatar.avatar or DEFAULT_AVATAR }}" 
+                     id='profile-avatar' item-id="{{ page_profile.avatar.id or '' }}"
+                     class="displayable" type="{{ CONTENT_TYPES.image }}"
+                    />
+            </div>
+        </div>
+    </div>
+</div>

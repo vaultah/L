@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	{% block nav %}
+	<nav>
+	    <ul class='nav-bar'>
+        	<li class='mark'>
+        	    Account{{ " > " }}Main
+      	    </li>
+    	</ul>
+	</nav>
+	{% endblock %}
+    <div class="account-content">
+        {% include 'account/navigation.html' %}
+
+        <section class='account'>
+
+            {% block account_content %}{% endblock %}
+
+        </section>
+
+    </div>
+{% endblock %}
+{% block js %}
+{{ super() }}
+<script type="text/javascript">
+$(document).ready(function(){var a=location.href.toLowerCase();$(".account-nav li a").each(function(){-1<a.indexOf(this.href.toLowerCase())&&($("li.current").removeClass("current"),$(this).parent().addClass("current"))})});
+</script>
+{% endblock %}
+

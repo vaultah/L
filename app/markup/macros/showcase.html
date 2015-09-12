@@ -1,0 +1,14 @@
+{% macro image_showcase(image, owner_profile, urls) %}
+    <div class='showcase'>
+        <ul class='item-actions'>
+            <li>
+                <a href='/{{ owner_profile.name|e }}'>
+                    {{ owner_profile.real_name|e if owner_profile.real_name else owner_profile.name|e }}
+                </a>
+            </li>
+            <li class='score'>{{ image.score }}</li>
+        </ul>
+        <img src='{{ urls.large }}'/>
+    </div>
+
+{% endmacro %}
