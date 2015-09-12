@@ -9,3 +9,4 @@ bcrypt
 uwsgi
 colorama
 libsass
+bottle
