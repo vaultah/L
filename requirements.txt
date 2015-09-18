@@ -9,4 +9,5 @@ bcrypt
 uwsgi
 colorama
 libsass
+markdown2
 bottle
