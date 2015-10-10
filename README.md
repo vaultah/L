@@ -8,13 +8,13 @@
 
 ##Installation + deploy
 
-We are currently using MongoDB (as a database) and Nginx (as a webserver) which we expect you to install. You're also expected to allow L sending email, i.e. by installing Exim or other mail server.
+We are currently using MongoDB (as a database) and Nginx (as a webserver) which we expect you to install. You're also expected to allow **L** sending email, i.e. by installing Exim or other mail server.
 
 Additional libraries can be installed via `apt-get` (on Debian-based systems) as follows:
 
 	~$ sudo apt-get install libjpeg-dev zlib1g-dev libpng12-dev
 
-After all the requirements are satisfied, you can install L:
+After all the requirements are satisfied, you can install **L**:
 
 	~$ cd L
 	~/L$ python setup.py install
