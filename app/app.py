@@ -13,7 +13,7 @@ import functools
 
 from .el.misc import utils
 from . import consts
-from .bottle import request, hook, default_app, get, post, \
+from bottle import request, hook, default_app, get, post, \
                    route, debug, response, abort, url, redirect
 
 from . import jinja2htmlcompress

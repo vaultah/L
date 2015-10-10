@@ -7,7 +7,7 @@ from ...el.accounts.profile import profile
 from ...el.misc import utils
 from ...el.misc.errors import api as ae
 from ...el import ratings, images, posts, notifications
-from ...bottle import request, response
+from bottle import request, response
 
 
 def apiv2(func):

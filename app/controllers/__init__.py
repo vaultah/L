@@ -7,7 +7,7 @@ from ..el.misc import utils
 from .. import consts
 from . import api, accounts
 
-from ..bottle import request, redirect, response, abort
+from bottle import request, redirect, response, abort
 
 __all__ = ['index', 'sign_in', 'sign_up', 'profile', 'api', 'accounts']
 

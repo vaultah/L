@@ -5,14 +5,11 @@ from pathlib import Path
 import shutil
 from string import Template
 from pip.req import parse_requirements
-import colorama
+from pip.download import PipSession
 import time
 import os
 import signal
 import subprocess
-import sass
-
-colorama.init()
 
 ROOT = Path(__file__).resolve().parent
 CONFIG, NEW_CONFIG = ROOT / '_config', ROOT / 'L-config'
@@ -186,8 +183,8 @@ class Run(Command):
 
         print('Done.')
 
-
-it = parse_requirements(str(ROOT / 'requirements.txt'))
+it = parse_requirements(str(ROOT / 'requirements.txt'),
+                        session=PipSession())
 
 setup(
     name='L',

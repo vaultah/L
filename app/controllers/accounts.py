@@ -1,4 +1,4 @@
-from ..bottle import response, redirect, request
+from bottle import response, redirect, request
 from .. import consts
 from ..el.accounts import auth
 
