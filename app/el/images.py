@@ -71,7 +71,7 @@ class Image(abc.Scorable, abc.Item):
         # It won't be used anywhere in this function
         file.seek(0)
 
-        if len(content) > consts.MAX_FILE_SIZE:
+        if len(content) > consts.MAX_IMAGE_SIZE:
             raise ValueError('Image is too large')
 
         try:

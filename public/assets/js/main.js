@@ -1,25 +1,6 @@
 'use strict';
 
-console.log('Hey there! Have something to suggest? Visit the Headquarters!');
-console.log('TEST');
-var lenv = {
-    domain: document.domain,
-    xhr: '/api/02',
-    urlparts: window.location.pathname.split('/'),
-    content_types: JSON.parse('{{ CONTENT_TYPES_JSON }}' || null),
-    default_avatar: '{{ DEFAULT_AVATAR }}'
-};
-
-// Information about the current account
-
-lenv.account = {
-    logged: Number("{{ 1 if loggedin else 0 }}"),
-    current: "{{ current.record.name|e if loggedin else '' }}",
-    id: '{{ current.record.id|e if loggedin else "" }}',
-    notifications: JSON.parse("{{ notifications_json or {} }}")
-};
-
-console.log('You are', lenv.account.logged ? '' : 'not', 'logged');
+let lenv = {};
 
 // Users can send post and messages from any page of the site, so we 
 // got to initialize the attachment vault globally.
@@ -32,7 +13,7 @@ lenv.MessageAttachments = [];
     WebSocket communication, notifications etc.
 */
 
-lenv.streaming = new WebSocket('ws://' + lenv.domain + ':3671');
+lenv.streaming = new WebSocket('ws://' + VARS.wshost + ':3671');
 
 lenv.streaming.onmessage = function (event) {
     var sent = JSON.parse(event.data);
@@ -75,7 +56,7 @@ lenv.posts = {
         console.log('lenv.posts.create', data)
         $.ajax({
             type: 'POST',
-            url: lenv.xhr + '/posts',
+            url: VARS.xhr + '/posts',
             data: fd,
             processData: false,
             contentType: false,
@@ -84,13 +65,13 @@ lenv.posts = {
     },
     load: function(data, cb) {
         $.ajax({
-            url: lenv.xhr + '/posts?' + $.param(data),
+            url: VARS.xhr + '/posts?' + $.param(data),
             success: function (data) { cb(data) }
         });
     },
     delete: function(ids, cb) {
         $.ajax({
-            url: lenv.xhr + '/posts?ids=' + JSON.stringify(ids),
+            url: VARS.xhr + '/posts?ids=' + JSON.stringify(ids),
             type: 'DELETE',
             success: function (data) { cb(data) }
         })
@@ -102,7 +83,7 @@ lenv.posts = {
 lenv.images = {
     load: function(data, cb) {
         $.ajax({
-            url: lenv.xhr + '/images?' + $.param(data),
+            url: VARS.xhr + '/images?' + $.param(data),
             success: function (data) {
                 cb(data);
             }
@@ -122,7 +103,7 @@ lenv.images = {
             set: data.set || null
         });
         $.ajax({
-            url: lenv.xhr + '/images?' + params,
+            url: VARS.xhr + '/images?' + params,
             type: 'POST',
             data: fd,
             processData: false,
@@ -132,7 +113,7 @@ lenv.images = {
     },
     delete: function (ids, cb) {
         $.ajax({
-            url: lenv.xhr + '/images?ids=' + JSON.stringify(ids),
+            url: VARS.xhr + '/images?ids=' + JSON.stringify(ids),
             type: 'DELETE',
             success: function (data) { cb(data) }
         });
@@ -145,21 +126,21 @@ lenv.images = {
 lenv.account_data = {
     get: function (data, cb) {
         $.ajax({
-            url: lenv.xhr + '/records?' + $.param(data),
+            url: VARS.xhr + '/records?' + $.param(data),
             success: function (data) { cb(data) }
         })
     },
     update: function (data, cb) {
         $.ajax({
             type: 'PUT',
-            url: lenv.xhr + '/records/set', // Empty values will be eliminated anyway
+            url: VARS.xhr + '/records/set', // Empty values will be eliminated anyway
             data: JSON.stringify(data),
             success: function (data) { cb(data) }
         })
     },
     unset: function (data, cb) {
         $.ajax({
-            url: lenv.xhr + '/records/unset',
+            url: VARS.xhr + '/records/unset',
             type: 'PUT',
             data: data,
             success: function(data) {
@@ -176,7 +157,7 @@ lenv.account_data = {
 lenv.notifications  = {
     get: function(data, cb) {
         $.ajax({
-            url: lenv.xhr + '/notifications',
+            url: VARS.xhr + '/notifications',
             success: function(data) {
                 console.log(data)
             }
@@ -185,7 +166,7 @@ lenv.notifications  = {
     delete: function(ids) {
         if (typeof ids != 'undefined') {
             $.ajax({
-                url: lenv.xhr + '/notifications',
+                url: VARS.xhr + '/notifications',
                 type: 'DELETE',
                 data: JSON.stringify({'ids': ids}),
                 success: function(data) {
@@ -194,7 +175,7 @@ lenv.notifications  = {
             });
         } else {
             $.ajax({
-                url: lenv.xhr + '/notifications',
+                url: VARS.xhr + '/notifications',
                 type: 'DELETE',
                 success: function(data) {
                     console.log(data)
@@ -205,140 +186,9 @@ lenv.notifications  = {
 }
 
 
-/*///////////////////////////////////////////////////////////////////////////////////
-    FILE OPERATIONS
-///////////////////////////////////////////////////////////////////////////////////*/
 
 
-/*
-    Determine the image type by starting bytes. 
-    See the configuration file for the list of supported
-    image types.
-    `contents` is the result of readAsBinaryString method of FileReader.
-*/
-function image_type(contents) {
 
-    var bytes = '';
-    for (var i = 0; i < 4; i++)
-        bytes += contents[i].charCodeAt(0).toString(16).toLowerCase();
-
-    if (bytes == '47494638') {
-        return ['image', 'gif'];
-    } else if (bytes == '89504e47') {
-        return ['image', 'png'];
-    } else {
-        var nextbytes = '';
-        // From 6th to 10th byte
-        for (var i = 6; i < 10; i++) 
-            nextbytes += contents[i].charCodeAt(0).toString(16).toLowerCase();
-        if (!bytes.indexOf('ffd8ff') && (nextbytes == '4a464946' || nextbytes == '45786966'))
-            return ['image', 'jpeg'];
-        return false;   
-    }
-}
-
-/*
-    Add all files from `input.files` to `storage` and display them
-    in `box`
-*/
-function attach(input, box, storage) {
-
-    // Check if file is a valid attachment (used only inside `attach`)
-
-    function _valid(file) {
-        var res = file.slice(0, 10),
-            reader = new FileReader;
-        reader.onload = function(ev) {
-            var type = image_type(ev.target.result) || false;
-            console.log('Name:', file.name, 'detected type:', type, 'size:', file.size);
-            // 10 Megabytes 
-            // FIXME: Add the value from config
-            if (type && file.size <= 10 * 1024 * 1024) {
-                // For data URL
-                reader = new FileReader();
-                // Read the full file
-                reader.onload = function(e) { 
-                    // Construct data URI for displaying
-                    var uri = 'data:' + type[0] + '/' + type[1] + ';';
-                    uri += 'base64,' + btoa(e.target.result);
-                    storage.push({file: file, url: uri, type: type});
-
-                    var at = $('<li>'),
-                        arrow = $('<div>', {'class': 'arrow'})
-
-                    $('<div>', {'class': 'fill', 
-                                style: 'background-image: url(' + uri + ');' + 'height: 60px'
-                                }).appendTo(at);
-                    
-                    arrow.append($('<div>', {'class': 'delete', 'attachment-id': storage.length}));
-                    arrow.appendTo(at)
-                    box.append(at);
-
-                    // Allows to select the same file
-                    input.value = null;
-                }
-                reader.readAsBinaryString(file);
-            }
-        }
-        reader.readAsBinaryString(res);
-    }
-    for (var i = 0; i < input.files.length; i++)
-        _valid(input.files[i]);
-}
-
-
-/*/////////////////////////////////////////////////////////////////////////////////
-    COMMON UI OPS
-/////////////////////////////////////////////////////////////////////////////////*/
-
-/*
-    Scroll to the top of the page
-*/
-$.fn.stt = function(speed) {
-    var $this = $(this);
-    $this.hide();
-    if ( $(window).scrollTop() !=0 ) {
-        $this.show();
-    }
-    $(window).scroll(function() {
-        if($(window).scrollTop() == 0){
-            $this.stop(true,true).fadeOut(150);
-        } else {
-            $this.fadeIn(150);
-        }
-    });
-    $($this).click(function(e){
-        e.preventDefault();
-        $("html,body").animate({ scrollTop: 0 }, speed);
-    });
-}
-
-
-/*
-    Submit on Ctrl + Enter
-*/
-$.fn.ctrlEnter = function (btns, fn) {
-    // IIFE fits here perfectly, as without it we get problems when
-    // there're more than 1 form on the page.
-    (function(thiz, buttons){
-
-        function performAction (e) {
-            fn.call(thiz, e);
-            return false;
-        }
-
-        buttons.bind("click", performAction);
-
-        thiz.keydown(function (e) {
-            if (e.keyCode === 13 && e.ctrlKey) {
-                performAction(e);
-                e.preventDefault();
-            }
-        });
-
-    })($(this), $(btns));
-
-}
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////  OVERLAYS  //////////////////////////////////////////////////////
@@ -449,7 +299,7 @@ $('.displayable').click(function() {
     var type = Number($(this).attr('type')),
         id = $(this).attr('item-id');
     $('.showcase').show();
-    if (type == lenv.content_types.image) {
+    if (type == VARS.content_types.image) {
         lenv.images.load({id: id, showcase: 1}, function(data) {
             if (data.success) {
                 $('.showcase').remove();
@@ -473,7 +323,7 @@ $(document).on('click', '.vote-button', function () {
     else params = {'image': button.attr('image-id')} 
 
     $.ajax({
-        url: lenv.xhr + '/ratings/' + action + '?' + $.param(params),
+        url: VARS.xhr + '/ratings/' + action + '?' + $.param(params),
         type: 'PUT',
         success: function (data) {
             console.log(data);
@@ -610,7 +460,7 @@ $(document).ready(function() {
 
         image_id = $(this).attr('image-inner-id');
         $.ajax({
-            url: lenv.xhr + '/images/load?id='+image_id,
+            url: VARS.xhr + '/images/load?id='+image_id,
             success: function(data) {
                 console.log(data)
                 $('#fs-image-container').FullScreenImage(data.output.image.dimensions, data.output.image.url.large, function(){
@@ -646,7 +496,7 @@ $(document).ready(function() {
 
     $('.unpin-cover-photo').click(function(){
      $.ajax({
-         url: lenv.xhr + '/images/hide_cover',
+         url: VARS.xhr + '/images/hide_cover',
          success: function(){
              $('.cover-picture').empty();
          }
@@ -663,7 +513,7 @@ $(document).ready(function() {
             $('.change-buttons-content div').click(function () {
                 id = $(this).attr('image-inner-id');
                 $.ajax({
-                    url: lenv.xhr+'/images/upload?set=cover&id=' + id,
+                    url: VARS.xhr+'/images/upload?set=cover&id=' + id,
                     success: function(data) {
                         console.log(data);
                         if (data.success) {
@@ -703,7 +553,7 @@ $(document).ready(function() {
         var thiz = $(this),
             name = thiz.attr('name');
         $.ajax({
-            url: lenv.xhr+'/relations/follow?name=' + name,
+            url: VARS.xhr+'/relations/follow?name=' + name,
             success: function(data) {
                 console.log(data);
                 if (data.success) {
@@ -721,7 +571,7 @@ $(document).ready(function() {
         var thiz = $(this),
             name = thiz.attr('name');
         $.ajax({
-            url: lenv.xhr + '/relations/unfollow?name=' + name,
+            url: VARS.xhr + '/relations/unfollow?name=' + name,
             success: function(data) {
                 console.log(data);
                 if (data.success) {
@@ -739,7 +589,7 @@ $(document).ready(function() {
         var thiz = $(this),
             name = thiz.attr('name');
         $.ajax({
-            url: lenv.xhr + '/relations/friend?name=' +  name,
+            url: VARS.xhr + '/relations/friend?name=' +  name,
             success: function(data) {
                 console.log(data);
                 if (data.success) {
@@ -761,7 +611,7 @@ $(document).ready(function() {
         var thiz = $(this),
             name = thiz.attr('name');
         $.ajax({
-            url: lenv.xhr+'/relations/cancel?name=' +  name,
+            url: VARS.xhr+'/relations/cancel?name=' +  name,
             success: function(data) {
                 console.log(data);
                 if (data.success) {
@@ -778,7 +628,7 @@ $(document).ready(function() {
         var thiz = $(this),
             name = thiz.attr('name');
         $.ajax({
-            url: lenv.xhr+'/relations/confirm?name='+ name,
+            url: VARS.xhr+'/relations/confirm?name='+ name,
             success: function(data) {
                 console.log(data);
                 if (data.success) {
@@ -794,7 +644,7 @@ $(document).ready(function() {
         var thiz = $(this),
             name = thiz.attr('name');
         $.ajax({
-            url: lenv.xhr+'/relations/unfriend?name='+ name,
+            url: VARS.xhr+'/relations/unfriend?name='+ name,
             success: function(data) {
                 console.log(data);
                 if (data.success) {
@@ -1072,3 +922,153 @@ $(document).ready(function() {
 ///////////////////////////////////////////////
 // FIXME
 $(document).ready(function(){var a=location.href.toLowerCase();$(".account-nav li a").each(function(){-1<a.indexOf(this.href.toLowerCase())&&($("li.current").removeClass("current"),$(this).parent().addClass("current"))})});
+
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+/*///////////////////////////////////////////////////////////////////////////////////
+    COMMON UI OPS
+///////////////////////////////////////////////////////////////////////////////////*/
+
+
+/*
+    Scroll to the top of the page
+*/
+
+$.fn.stt = function(speed) {
+    let thiz = $(this);
+    thiz.hide();
+
+    if ($(window).scrollTop())
+        thiz.show();
+
+    $(window).scroll(() => {
+        if (!$(window).scrollTop())
+            thiz.stop(true,true).fadeOut(150);
+        else thiz.fadeIn(150);
+    });
+
+    $(thiz).click((e) => {
+        e.preventDefault();
+        $('html,body').animate({ scrollTop: 0 }, speed);
+    });
+}
+
+
+/*
+    Submit on Ctrl + Enter
+*/
+$.fn.ctrlEnter = function (buttons, fn) {
+    // IIFE fits here perfectly, as without it we get problems when
+    // there're more than 1 form on the page.
+    ((thiz, buttons) => {
+
+        function performAction (e) {
+            fn.call(thiz, e);
+            return false;
+        }
+
+        buttons.bind('click', performAction);
+
+        thiz.keydown(function (e) {
+            if (e.keyCode === 13 && e.ctrlKey) {
+                performAction(e);
+                e.preventDefault();
+            }
+        });
+
+    })($(this), $(buttons));
+}
+
+
+/*///////////////////////////////////////////////////////////////////////////////////
+    FILE OPERATIONS
+///////////////////////////////////////////////////////////////////////////////////*/
+
+
+/*
+    Determine the image type by starting bytes. 
+    See the configuration file for the list of supported
+    image types.
+    `contents` is the result of readAsBinaryString method of FileReader.
+*/
+function image_type(contents) {
+
+    let bytes = '';
+    for (var i = 0; i < 4; i++)
+        bytes += contents[i].charCodeAt(0).toString(16).toLowerCase();
+
+    if (bytes == '47494638') {
+        return ['image', 'gif'];
+    } else if (bytes == '89504e47') {
+        return ['image', 'png'];
+    } else {
+        let nextbytes = '';
+        // From 6th to 10th byte
+        for (let i = 6; i < 10; i++) 
+            nextbytes += contents[i].charCodeAt(0).toString(16).toLowerCase();
+        if (!bytes.indexOf('ffd8ff') && (nextbytes == '4a464946' || nextbytes == '45786966'))
+            return ['image', 'jpeg'];
+        return false;   
+    }
+}
+
+/*
+    Add all files from `input.files` to `storage` and display them
+    in `box`
+*/
+function attach(input, box, storage) {
+
+    // Check if file is a valid attachment (used only inside `attach`)
+
+    function _valid(file) {
+        let res = file.slice(0, 10),
+            reader = new FileReader();
+        reader.onload = function(ev) {
+            let type = image_type(ev.target.result) || false;
+            console.debug('Name:', file.name, 'detected type:', type, 'size:', file.size);
+            if (type && file.size <= VARS.max_image_size) {
+                // For data URL
+                reader = new FileReader();
+                // Read the full file
+                reader.onload = function(e) { 
+                    // Construct data URI for displaying
+                    let uri = `data:${ type[0] } / ${ type[1] };base64,${ btoa(e.target.result) }`;
+                    storage.push({file: file, url: uri, type: type});
+
+                    let at = $('<li>'), arrow = $('<div>', {'class': 'arrow'})
+
+                    $('<div>', {
+                        'class': 'fill', 
+                        'style': `background-image: url(${ uri });height: 60px`
+                    }).appendTo(at);
+                    
+                    arrow.append($('<div>', {'class': 'delete', 'attachment-id': storage.length}));
+                    arrow.appendTo(at)
+                    box.append(at);
+
+                    // Allows to select the same file
+                    input.value = null;
+                }
+                reader.readAsBinaryString(file);
+            }
+        }
+        reader.readAsBinaryString(res);
+    }
+    for (let i = 0; i < input.files.length; i++)
+        _valid(input.files[i]);
+}
+
+
+// let API = {
+//     'accounts': new AccountsAPI,
+//     'posts': new PostsAPI,
+//     'images': new ImagesAPI
+// };
