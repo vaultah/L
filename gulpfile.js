@@ -1,8 +1,7 @@
 var gulp = require('gulp'),
     babel = require('gulp-babel'),
     uglify = require('gulp-uglify'),
-    sourcemaps = require('gulp-sourcemaps'),
-    uglify_inline = require('gulp-uglify-inline');
+    sourcemaps = require('gulp-sourcemaps');
 
 gulp.task('js', function() {
     return gulp.src(['public/assets/js/*.js'])
@@ -13,10 +12,4 @@ gulp.task('js', function() {
                .pipe(gulp.dest('dist'));
 });
 
-gulp.task('html', function() {
-    return gulp.src(['app/markup/**/*.html'])
-               .pipe(uglify_inline())
-               .pipe(gulp.dest('dist'))
-});
-
-gulp.task('default', ['js', 'html']);
+gulp.task('default', ['js']);
