@@ -14,9 +14,9 @@ gulp.task('js', function() {
 });
 
 gulp.task('html', function() {
-	return gulp.src(['app/markup/**/*.html'])
-			   .pipe(uglify_inline())
-			   .pipe(gulp.dest('app/markup'))
+    return gulp.src(['app/markup/**/*.html'])
+               .pipe(uglify_inline())
+               .pipe(gulp.dest('dist'))
 });
 
 gulp.task('default', ['js', 'html']);
