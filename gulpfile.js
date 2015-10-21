@@ -18,3 +18,5 @@ gulp.task('html', function() {
 			   .pipe(uglify_inline())
 			   .pipe(gulp.dest('app/markup'))
 });
+
+gulp.task('default', ['js', 'html']);
