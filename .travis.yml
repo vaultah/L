@@ -24,6 +24,7 @@ before_script:
   - npm install --save-dev gulp-uglify
   - npm install --save-dev gulp-uglify-inline
   - npm install --save-dev gulp-sourcemaps
+  - npm install --save-dev gulp-jshint 
   - python setup.py prepare
 
 script:
