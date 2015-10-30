@@ -8,7 +8,7 @@ gulp.task('js', function() {
     return gulp.src(['public/assets/js/*.js'])
                // .pipe(sourcemaps.init())
                .pipe(jshint({ esnext: true }))
-			   .pipe(jshint.reporter('default', { verbose: true }))
+			         .pipe(jshint.reporter('default', { verbose: true }))
                .pipe(babel())
                .pipe(uglify())
                // .pipe(sourcemaps.write())
