@@ -1,13 +1,3 @@
-// 'use strict';
-
-// let lenv = {};
-
-// // Users can send post and messages from any page of the site, so we 
-// // got to initialize the attachment vault globally.
-
-// lenv.PostAttachments = [];
-// lenv.MessageAttachments = [];
-
 
 // /*
 //     WebSocket communication, notifications etc.
@@ -966,6 +956,10 @@ class Uploader {
         this.push(object);
     }
 
+    clear() {
+        this.files.length = 0;        
+    }
+
     * filter(type=null) {
         for (let o of this.files)
             if (o === null || o instanceof type)
@@ -981,7 +975,6 @@ class Uploader {
         for (let o of it) 
             yield this.markup(o);
     }
-
 
     static markup(object) {
         return `TODO ${ object.data() }`;
