@@ -931,6 +931,18 @@ function guid() {
 }
 
 
+class Overlay {
+    constructor({source,}) {
+        this._markup = source;
+        this._markup_copy = source.clone(true, true);
+    }
+
+    restore() {
+        this._original.replaceWith(this._original_copy)
+    }
+}
+
+
 class _Image {
     constructor(file, type, uri) {
         this.type = type;
@@ -947,7 +959,6 @@ class _Image {
 }
 
 class Uploader {
-
     constructor() {
         this.files = [];
     }
