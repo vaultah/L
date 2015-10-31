@@ -17,14 +17,14 @@ install:
 before_script:
   - nvm install stable
   - npm install --global gulp
-  - npm install --save-dev gulp
-  - npm install --save-dev gulp-sass
-  - npm install --save-dev gulp-babel
-  - npm install --save-dev gulp-inject
-  - npm install --save-dev gulp-uglify
-  - npm install --save-dev gulp-uglify-inline
-  - npm install --save-dev gulp-sourcemaps
-  - npm install --save-dev gulp-jshint 
+  - npm install gulp
+  - npm install gulp-sass
+  - npm install gulp-babel
+  - npm install gulp-inject
+  - npm install gulp-uglify
+  - npm install gulp-uglify-inline
+  - npm install gulp-sourcemaps
+  - npm install gulp-jshint 
   - python setup.py prepare
 
 script:

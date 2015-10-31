@@ -958,36 +958,33 @@ class _Image {
 
 class Uploader {
 
-    constructor(element) {
-        this.new = [];
-        if (!this.files)
-            this.files = [];
-        for (let f of element.files) {
-            try {
-                this.get_type(f);
-            } catch (e) {
-                console.error(e);
-                continue;
-            }
-            this.new.push(f);
-        }
-        this.files.push(...this.new);
-
+    constructor() {
+        this.files = [];
     }
 
-    add(file) {
-
+    add(object) {
+        this.push(object);
     }
 
     * filter(type=null) {
-        for (let f of this.files)
-            if (f === null || f instanceof type)
-                yield f;
+        for (let o of this.files)
+            if (o === null || o instanceof type)
+                yield o;
     }
 
-    * data(it) {
-        for (let f of it)
-            yield f.data();
+    static * data(it) {
+        for (let o of it)
+            yield o.data();
+    }
+
+    static * html(it) {
+        for (let o of it) 
+            yield this.markup(o);
+    }
+
+
+    static markup(object) {
+        return `TODO ${ object.data() }`;
     }
 
     /*
@@ -1008,14 +1005,41 @@ Uploader.input_files = Map();
 
 
 $('input.uploads').change(() => {
-    let thiz = $(this), up = new Uploader(thiz),
-        preview = thiz.parent().find('div.uploads-preview');
-    Uploader.input_files.set(this, up);
-    preview.append(...up.data());
-    // FIXME ...
-    // readAsDataString(...) -> uri
-    // _Image(file, Uploader.get_type(uri), uri)
-    this.files.length = 0; // ?
+    let thiz = $(this), up,
+        preview = thiz.parent().find('div.uploads-preview'),
+        promises = [];
+
+    // Store one Uploader instance for each input element
+    up = Uploader.input_files.get(this);
+    if (up === undefined) {
+        up = new Uploader();
+        Uploader.input_files.set(this, up);
+    }
+
+    for (let f of this.files) {
+        let promise = new Promise((resolve, _) => {
+            let reader = new FileReader();
+            reader.onload = (event) => {
+                try { resolve(Uploader.get_type(f, event.target.result)); }
+                catch (e) {
+                    console.error(e);
+                    // ♫ Never meant to break my own promises ♫
+                    resolve(false);
+                }
+            };
+            reader.readAsDataURL(f);
+        });
+        promises.push(promise);
+    }
+
+    Promise.all(promises).then((objects) => {
+        this.files.length = 0;
+        let good = objects.filter(Boolean);
+        for (let o of good)
+            up.add(o);
+        
+        preview.append(Array.from(up.html(good)));
+    });
 });
 
 
