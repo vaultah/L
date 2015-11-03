@@ -211,24 +211,6 @@
 //     lenv.PostAttachments[id - 1] = null;
 // });
 
-// $('#post-overlay-textarea').ctrlEnter('#post-overlay-submit', function() {
-//     var target = $('.post-container', '#post-overlay-reply');
-//     lenv.posts.create({
-//         content: $(this).val(), 
-//         attachments: lenv.PostAttachments,
-//         post: target.attr('post-id') || null
-//     }, function(data) {
-//         $(".hint", '#gnpo .action-bar').html(data.text);
-//         console.log(data)
-//         if (data.success) {
-//             $('#post-overlay-reply .no-reply').trigger('click');
-//             lenv.PostAttachments.length = 0;
-//             $(this).val('');
-//             $('#gnpo').hide();
-//             $('#post-overlay-attachments').empty();
-//         }
-//     });
-// });
 
 // /* IMAGES *////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -922,6 +904,35 @@
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+
+$(document).on('click', 'button.post-overlay', (e) => {
+    let target = $('TODO'),
+        fileinput = $('TODO'),
+        overlay = new Overlay(target);
+        // var target = $('.post-container', '#post-overlay-reply');
+
+    overlay.show();
+
+    $('#post-overlay-textarea').ctrl_enter('#post-overlay-submit', () => {
+        (new PostsAPI()).create({
+            content: $(this).val(), 
+            // attachments: lenv.PostAttachments,
+            // post: target.attr('post-id') || null
+        }).then(
+            (data) => {
+                console.debug('Posted succesfully,', data);
+                overlay.hide();
+                overlay.restore();
+                Uploader.input_files.delete(fileinput);
+            },
+            (text) => {
+                // TODO: Display error message to user
+            }
+        );
+    });
+});
+
+
 function guid() {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
@@ -938,7 +949,7 @@ class Overlay {
     }
 
     restore() {
-        this._original.replaceWith(this._original_copy)
+        this._original.replaceWith(this._original_copy);
     }
 }
 
@@ -1056,7 +1067,7 @@ $('input.uploads').change(() => {
     Scroll to the top of the page
 */
 
-$.fn.stt = function(speed) {
+$.fn.stt = (speed) => {
     let thiz = $(this);
     thiz.hide();
 
@@ -1079,19 +1090,17 @@ $.fn.stt = function(speed) {
 /*
     Submit on Ctrl + Enter
 */
-$.fn.ctrlEnter = function (buttons, fn) {
+$.fn.ctrl_enter = (buttons, fn) => {
     // IIFE fits here perfectly, as without it we get problems when
     // there're more than 1 form on the page.
     ((thiz, buttons) => {
 
-        function performAction (e) {
+        buttons.on('click', (e) => {
             fn.call(thiz, e);
             return false;
-        }
+        });
 
-        buttons.bind('click', performAction);
-
-        thiz.keydown(function (e) {
+        thiz.on('keydown', (e) => {
             if (e.keyCode === 13 && e.ctrlKey) {
                 performAction(e);
                 e.preventDefault();
