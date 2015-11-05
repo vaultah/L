@@ -56,8 +56,9 @@ docs/_build/
 # PyBuilder
 target/
 
-# Minified CSS
-*.min.css
+# Some directories under public/
+public/assets/js
+public/assets/css
 
 # L's generated configuration files
 L-config/
