@@ -18,8 +18,8 @@ before_script:
   - nvm install stable
   - npm install --global gulp
   - npm install
+  - gulp
   - python setup.py prepare
 
 script:
-  - gulp
   - py.test --pyargs app --no-send
