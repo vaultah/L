@@ -56,9 +56,6 @@ docs/_build/
 # PyBuilder
 target/
 
-# Some directories under public/
-public/assets/js
-public/assets/css
 
 # L's generated configuration files
 L-config/
