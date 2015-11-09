@@ -9,7 +9,9 @@ var gulp = require('gulp'),
 
 
 var CSSDIR = 'dist/public/assets/css',
-    CSSPREFIX = Date.now().toString(16) + '-';
+    JSDIR = 'dist/public/assets/js',
+    CSSPREFIX = Date.now().toString(16) + '-',
+    JSPREFIX = CSSPREFIX;
 
 gulp.task('js', function() {
     return gulp.src(['src/js/*.js'])
@@ -19,7 +21,8 @@ gulp.task('js', function() {
                .pipe(babel())
                .pipe(uglify())
                // .pipe(sourcemaps.write())
-               .pipe(gulp.dest('dist/public/assets/js'));
+               .pipe(rename({ prefix: JSPREFIX }))
+               .pipe(gulp.dest(JSDIR));
 });
 
 
@@ -31,8 +34,11 @@ gulp.task('css', function() {
 });
 
 
-gulp.task('markup', ['css'], function() {
-    var src = gulp.src([CSSDIR + '/' + CSSPREFIX + '*.css'], { read: false });
+gulp.task('markup', ['css', 'js'], function() {
+    var src = gulp.src([
+      CSSDIR + '/' + CSSPREFIX + '*.css',
+      JSDIR + '/' + JSPREFIX + '*.js',
+    ], { read: false });
     return gulp.src(['src/markup/**/*.html'])
                .pipe(inject(src, { ignorePath: ['dist', 'public'] }))
                .pipe(gulp.dest('dist/markup'));
