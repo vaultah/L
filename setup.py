@@ -40,17 +40,6 @@ class Prepare(Command):
     def finalize_options(self):
         pass
 
-    def css_symlinks(self):
-        # Create symlinks to uncompressed CSS.
-        # They'll be replaced by compressed CSS, once the project is deployed
-        for p in (ROOT / 'public' / 'assets').glob('*.css'):
-            if p.is_symlink():
-                continue
-            try:
-                p.with_suffix('.min.css').symlink_to(p)
-            except FileExistsError:
-                print('{}: the symlink is already there'.format(p.name))
-
 
     def json_conf(self):
         try:
@@ -63,7 +52,6 @@ class Prepare(Command):
  
     def run(self):
         self.json_conf()
-        self.css_symlinks()
 
 
 class Deploy(Command):
