@@ -4,27 +4,38 @@ var gulp = require('gulp'),
     sourcemaps = require('gulp-sourcemaps'),
     jshint = require('gulp-jshint'),
     sass = require('gulp-sass'),
-    rename = require("gulp-rename");
+    rename = require('gulp-rename'),
+    inject = require('gulp-inject');
 
+
+var CSSDIR = 'dist/public/assets/css';
 
 gulp.task('js', function() {
     return gulp.src(['src/js/*.js'])
                // .pipe(sourcemaps.init())
                .pipe(jshint({ esnext: true }))
-			         .pipe(jshint.reporter('default', { verbose: true }))
+               .pipe(jshint.reporter('default', { verbose: true }))
                .pipe(babel())
                .pipe(uglify())
                // .pipe(sourcemaps.write())
-               .pipe(gulp.dest('public/assets/js'));
+               .pipe(gulp.dest('dist/public/assets/js'));
 });
 
 
-gulp.task('css', function () {
-    return gulp.src(['src/js/*.css'])
+gulp.task('css', function() {
+    return gulp.src(['src/css/*.css'])
                .pipe(sass({ style: 'compressed' }))
-               .pipe(rename({ suffix: '.min' }))
-               .pipe(gulp.dest('public/assets/css'));
+               .pipe(rename({ prefix: Date.now().toString(16) + '-' }))
+               .pipe(gulp.dest(CSSDIR));
 });
 
 
-gulp.task('default', ['js', 'css']);
+gulp.task('markup', ['css'], function() {
+    var src = gulp.src([CSSDIR + '/*.css'], { read: false });
+    return gulp.src(['src/markup/**/*.html'])
+               .pipe(inject(src))
+               .pipe(gulp.dest('dist/markup'));
+});
+
+
+gulp.task('default', ['js', 'css', 'markup']);
