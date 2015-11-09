@@ -7,7 +7,6 @@ var gulp = require('gulp'),
     rename = require('gulp-rename'),
     inject = require('gulp-inject');
 
-
 var CSSDIR = 'dist/public/assets/css',
     JSDIR = 'dist/public/assets/js',
     CSSPREFIX = Date.now().toString(16) + '-',
@@ -45,4 +44,8 @@ gulp.task('markup', ['css', 'js'], function() {
 });
 
 
-gulp.task('default', ['js', 'css', 'markup']);
+gulp.task('copy images', function() {
+    return gulp.src(['src/images/**/*']).pipe(gulp.dest('dist/public/assets/images'));
+});
+
+gulp.task('default', ['js', 'css', 'markup', 'copy images']);
