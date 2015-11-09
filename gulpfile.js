@@ -8,7 +8,8 @@ var gulp = require('gulp'),
     inject = require('gulp-inject');
 
 
-var CSSDIR = 'dist/public/assets/css';
+var CSSDIR = 'dist/public/assets/css',
+    CSSPREFIX = Date.now().toString(16) + '-';
 
 gulp.task('js', function() {
     return gulp.src(['src/js/*.js'])
@@ -24,16 +25,16 @@ gulp.task('js', function() {
 
 gulp.task('css', function() {
     return gulp.src(['src/css/*.css'])
-               .pipe(sass({ style: 'compressed' }))
-               .pipe(rename({ prefix: Date.now().toString(16) + '-' }))
+               .pipe(sass({ outputStyle: 'compressed' }))
+               .pipe(rename({ prefix: CSSPREFIX }))
                .pipe(gulp.dest(CSSDIR));
 });
 
 
 gulp.task('markup', ['css'], function() {
-    var src = gulp.src([CSSDIR + '/*.css'], { read: false });
+    var src = gulp.src([CSSDIR + '/' + CSSPREFIX + '*.css'], { read: false });
     return gulp.src(['src/markup/**/*.html'])
-               .pipe(inject(src))
+               .pipe(inject(src, { ignorePath: ['dist', 'public'] }))
                .pipe(gulp.dest('dist/markup'));
 });
 
