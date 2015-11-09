@@ -14,11 +14,10 @@ CONFIG = ROOT / 'L-config'
 
 L_ROOT = ROOT / 'app'
 L_VIEWS = ROOT / 'dist' / 'markup'
-L_PUBLIC = ROOT / 'public'
+L_PUBLIC = ROOT / 'dist' / 'public'
 
 # Just the name, hence PurePaths
 ASSETS = PurePath('assets')
-L_ASSETS = L_PUBLIC / ASSETS
 
 IMAGES_DIR = 'images'
 L_MEDIA = ROOT / 'L-media'
