@@ -30,18 +30,6 @@ def mentions(source):
     return _mentions_compl.findall(source)
 
 
-def css_link(names):
-    if isinstance(names, str):
-        names = names,
-
-    for style in names:
-        # FIXME MINIFY IN PREPARE
-        path = consts.ASSETS / (style + '.min.css')
-        # TODO: revision? Not sure, stat is easier.
-        modified = (consts.L_PUBLIC / path).stat().st_mtime
-        yield '{!s}?{:x}'.format(PurePath('/') / path, int(modified))
-
-
 def line_breaks(value, m=2):
     pat = r'\n{{{0},}}'.format(m)
     return re.sub(pat, '\n\n', value)
