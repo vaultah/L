@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<head>
+    {{ "<!--
+        
+    .-.    _       .-.   .-.      
+    : :   :_;      : :  .' `.     
+    : :   .-. .--. : `-.`. .'.--. 
+    : :__ : :' .; :: .. :: :`._-.'
+    :___.':_;`._. ;:_;:_;:_;`.__.'
+              .-. :               
+              `._.'               
+    2015
+
+    -->" }}
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta content='{% block meta_description %}{% endblock %}' name='description' />
+    <meta content='{% block meta_content %}{% endblock %}' />
+    <meta name='viewport' content='width=device-width, initial-scale=1.0,user-scalable=yes' />
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <!-- inject:css -->
+    <!-- endinject -->
+</head>
+<body>
+{% block header %}
+    {% include 'header/wrap.html' %}
+{% endblock %}
+{% include 'regions/left.html' %}
+
+<main>{% block content %}{% endblock %}</main>
+
+{% block overlays %}
+
+<div id="full-screen-container" class="overlay thidden">
+    <div class="overlay-shadow"></div>
+    <div class="overlay-container full-screen-content">
+        <header>
+            <div class="name">Posted by <a href='#'>@nikki</a></div>
+            <div class="votes"></div>
+        </header>
+        <div class="overlay-content">
+
+        </div>
+        <div class='overlay-hint'>Click on the dark area to close or press Esc</div>
+    </div>
+</div>
+
+<div id='gnpo' class='overlay thidden'>
+    <div class='overlay-shadow'></div>
+    <div class='overlay-container'>
+        <div class='overlay-title'>New post</div>
+        <div class='overlay-content'>
+
+            <div class='textarea-container'>
+                <textarea id='post-overlay-textarea' class='gnpo-textarea' name='post-content'
+                          placeholder="What's new? :)" autocapitalize="off" autocorrect="off"
+                          autocomplete="off" spellcheck="false" maxlength=''></textarea>
+            </div>
+            <div class='action-bar'>
+                <input type="submit" class="green-button button" id='post-overlay-submit' value="Post it" />
+                <input type='file' multiple id='post-overlay-attach' class="fake-input" />
+                <div class="attachments-input button">
+                    Attach
+                </div>
+
+                <div class='hint'>You can use {{ ' ' }} <kbd>Ctrl + Enter</kbd> {{ ' ' }} to post</div>
+            </div>
+            <ul id='post-overlay-attachments' class="attachments-list"></ul>
+
+        </div>
+        <div id='post-overlay-reply' class='reply'>
+            <span class='hint'>In reply to</span>
+            <span class='hint no-reply'>Don't reply</span>
+        </div>
+        <div class='overlay-hint'>Click on the dark area to close or press {{ " " }} <kbd>Esc</kbd></div>
+    </div>
+</div>
+
+<div id='noto' class='overlay thidden'>
+    <div class='overlay-container'>
+        <div class='overlay-title'>Unread notifications</div>
+        <div class='overlay-content'>
+            <ul class='notifications-list'>
+                {% for id, markup in notifications.items() %}
+                    <li data-id='{{ id }}'><div class='mark-read'>Mark as read</div>{{ markup }}</li> 
+                {% endfor %}
+            </ul>
+            <button class="mark-all-read button">
+                Mark all read
+            </button>
+
+        </div>
+        <div class='overlay-hint'>Click on the dark area to close or press {{ " " }} <kbd>Esc</kbd></div>
+    </div>
+    <div class='overlay-shadow'></div>
+</div>
+
+<div id='giuo' class='overlay thidden'>
+    <div class='overlay-shadow'></div>
+    <div class='overlay-container'>
+        <div class='overlay-title'>Upload pictures</div>
+
+        <div class='overlay-content upload-overlay-content'>
+            <p>
+                Just select some images from your computer and we'll take care of 'em. 
+                Additionaly, you can provide the URL of an image you want to upload.
+            </p>
+
+            <input type='file' id='images-upload-input' multiple='multiple' class='fake-input'/>
+            <div id='images-upload-select' class="button big-button white-button">Choose files</div>
+            <input type='text' id='upload-images-url' placeholder='Insert URL and press Enter' autocomplete="off" spellcheck='false'/>
+            <div class="action-bar">
+                <div class='hint' id='images-upload-hint'>
+                    PNG, GIFs and JPGs are allowed
+                </div>
+            </div>
+        </div>
+        <div class='overlay-hint'>Click on the dark zone to close</div>
+    </div>
+</div>
+{% endblock %}
+
+
+{% block js %}
+<script>
+'use strict';
+
+
+var VARS = {
+    domain: document.domain,
+    wshost: document.domain, // No?
+    xhr: '/api/02',
+    content_types: JSON.parse('{{ CONTENT_TYPES_JSON }}' || null),
+    account: {
+        logged: Number("{{ 1 if loggedin else 0 }}"),
+        current: "{{ current.record.name|e if loggedin else '' }}",
+        id: '{{ current.record.id|e if loggedin else "" }}',
+        notifications: JSON.parse("{{ notifications_json or {} }}")
+    },
+    max_image_size: Number("{{ MAX_IMAGE_SIZE }}")
+};
+console.log('Hey there! Have something to suggest? Visit the Headquarters!');
+console.log('You are', VARS.account.logged ? '' : 'not', 'logged');
+
+</script>
+{% endblock %}
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+<script src="/our/file.js"></script>
+</body>
+</html>

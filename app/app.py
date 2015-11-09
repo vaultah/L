@@ -41,8 +41,8 @@ def set_environ():
         request.environ['DOTTED_DOMAIN'] = ''
 
 
-def view(name, styles='common'):
-    presets = {'css': tuple(utils.css_link(styles))}
+def view(name):
+    presets = {}
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):

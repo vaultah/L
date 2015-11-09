@@ -17,10 +17,7 @@ install:
 before_script:
   - nvm install stable
   - npm install --global gulp
-  - npm install --save-dev gulp
-  - npm install --save-dev gulp-sass
-  - npm install --save-dev gulp-inline
-  - npm install --save-dev gulp-babel
+  - npm install
   - python setup.py prepare
 
 script:
