@@ -1,6 +1,5 @@
 {
   "name": "L",
-  "version": "0.0.0",
   "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-babel": "^5.2.1",

@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parent.parent
 CONFIG = ROOT / 'L-config'
 
 L_ROOT = ROOT / 'app'
-L_VIEWS = L_ROOT / 'markup'
+L_VIEWS = ROOT / 'dist' / 'markup'
 L_PUBLIC = ROOT / 'public'
 
 # Just the name, hence PurePaths
