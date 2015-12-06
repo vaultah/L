@@ -113,7 +113,7 @@
 //         id = $(this).attr('item-id');
 //     $('.showcase ').show();
 //     if (type == VARS.content_types.image) {
-//         lenv.images.load({id: id, showcase: 1}, function(data) {
+//         lenv.images.get({id: id, showcase: 1}, function(data) {
 //             if (data.success) {
 //                 $('.showcase').remove();
 //                 var new_sc = $(data.showcase);
@@ -318,7 +318,7 @@
 
 //     $('#change-cover-photo').click(function(){
 //         $('#change-cover-photo-box').show(50);
-//         lenv.images.load({number: 15, type: 'thumb'}, function(data) {
+//         lenv.images.get({number: 15, type: 'thumb'}, function(data) {
 //             console.log(data);
 //             $('.change-buttons-content').html(data.output.html);
 
@@ -351,7 +351,7 @@
 //             start_id = $(".page-post:last").attr("post-id");
 //         if(st >= 0.7 * h && !loading && h > 500){
 //             loading = true;
-//             lenv.posts.load({start: start_id, page: lenv.Profile.Name}, function(data) {
+//             lenv.posts.get({start: start_id, page: lenv.Profile.Name}, function(data) {
 //                 $(".posts").append(data.output.html);
 //                 loading = false;
 //             });

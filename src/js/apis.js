@@ -25,7 +25,7 @@ let APIS = {
                 contentType: false,
             });
 
-        }, load(data) {
+        }, get(data) {
             return $.ajax({
                 url: `${ VARS.xhr }/posts?${ $.param(data)} `,
             });
@@ -40,7 +40,7 @@ let APIS = {
     // IMAGES
 
     images: {
-        load(data) {
+        get(data) {
             return $.ajax({
                 url: `${ VARS.xhr }/images?${ $.param(data) }`,
             });
