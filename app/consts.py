@@ -9,9 +9,6 @@ from enum import IntEnum
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# Path to generated config
-CONFIG = ROOT / 'L-config'
-
 L_ROOT = ROOT / 'app'
 L_VIEWS = ROOT / 'dist' / 'markup'
 L_PUBLIC = ROOT / 'dist' / 'public'
@@ -29,15 +26,6 @@ for p in (L_MEDIA_IMAGES,):
         p.mkdir(parents=True)
     except FileExistsError:
         pass
-
-# Load some info from the previously generated config
-# Must be available after the 'prepare' step
-
-with (CONFIG / 'L.json').open() as f:
-    params = json.load(f)
-    L_MEDIA_DOMAIN = '{media_domain}.{host}'.format_map(params)
-    L_SMTP_HOST = params['smtp_host']
-    L_HOST = params['host']
 
 # Notifications
 

@@ -13,14 +13,8 @@ Additional libraries can be installed via `apt-get` (on Debian-based systems) as
 
 	~$ sudo apt-get install libjpeg-dev zlib1g-dev libpng12-dev
 
-After all the requirements are satisfied, you can install **L**:
+After all the requirements are satisfied, you can install **L**.
 
-	~$ cd L
-	~/L$ python setup.py install
-	~/L$ python setup.py prepare
-	~/L$ vi config/L.json # Edit generated config
-	~/L$ sudo python setup.py deploy
- 
 
 We use py.test for testing. A minimal test would look like
 
