@@ -56,7 +56,6 @@ docs/_build/
 # PyBuilder
 target/
 
-
 # L's generated configuration files
 L-config/
 
