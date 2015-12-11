@@ -6,7 +6,6 @@ WebTest
 pytest
 autobahn
 bcrypt
-uwsgi
 colorama
 markdown2
 -e git+https://github.com/bottlepy/bottle.git#egg=bottle
