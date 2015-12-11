@@ -14,7 +14,7 @@ import functools
 from .el.misc import utils
 from . import consts
 from bottle import request, hook, default_app, get, post, \
-                   route, debug, response, abort, url, redirect
+                   route, debug, response, abort, url, redirect, run
 
 from . import jinja2htmlcompress
 env = jinja2.Environment(extensions=[jinja2htmlcompress.HTMLCompress],
@@ -220,6 +220,17 @@ def main_api(version, part, action=None):
 
 
 application = default_app()
-debug()
 
-
+if __name__ == '__main__':
+    import argparse
+    import json
+    from pathlib import Path
+    parser = argparse.ArgumentParser(description='TODO')
+    parser.add_argument('--config')
+    args = parser.parse_args()
+    if args.config is not None:
+        config = Path(args.config).resolve()
+        with config.open() as file:
+            # TODO: consts.config.update(json.load(file))
+            pass
+    run()

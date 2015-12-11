@@ -5,7 +5,8 @@ var gulp = require('gulp'),
     jshint = require('gulp-jshint'),
     sass = require('gulp-sass'),
     rename = require('gulp-rename'),
-    inject = require('gulp-inject');
+    inject = require('gulp-inject'),
+    concat = require('gulp-concat');
 
 var CSSDIR = 'dist/public/assets/css',
     JSDIR = 'dist/public/assets/js',
@@ -18,6 +19,7 @@ gulp.task('js', function() {
                .pipe(jshint({ esnext: true }))
                .pipe(jshint.reporter('default', { verbose: true }))
                .pipe(babel())
+               .pipe(concat('all.js'))
                .pipe(uglify())
                // .pipe(sourcemaps.write())
                .pipe(rename({ prefix: JSPREFIX }))
