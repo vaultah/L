@@ -18,6 +18,7 @@ before_script:
   - cd redis-stable
   - make
   - echo 'daemonize yes' | src/redis-server -
+  - cd ..
   ######################################
 
 script:
