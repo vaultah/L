@@ -149,7 +149,7 @@ def test_reset():
             # set .key anyway
             inst._generate_key()
         else:
-            with (consts.L_VIEWS / 'email' / 'password-reset.html').open() as tf:
+            with (consts.VIEWS / 'email' / 'password-reset.html').open() as tf:
                 # No need to load environment
                 inst.send(host='not_critical', template=Template(tf.read()))
 

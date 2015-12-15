@@ -14,8 +14,8 @@ from pathlib import PurePath
 
 def image_url(**ka):
     defs = {'schema': 'http',
-            'domain': consts.L_MEDIA_DOMAIN,
-            'images': consts.IMAGES_DIR,
+            'domain': consts.ext.MEDIA_HOST,
+            'images': consts.MEDIA_IMAGES.stem,
             'type': ka.get('type', consts.ORIGINAL_IMAGE),
             'name': ka['name']}
 

@@ -48,7 +48,7 @@ class Image(abc.Scorable, abc.Item):
         # Check if we can skip loading the file from disk
         if not isinstance(file, io.IOBase):
             full_name = '{0}-{1}'.format(consts.ORIGINAL_IMAGE, file)
-            file = (consts.L_MEDIA_IMAGES / full_name).open('rb')
+            file = (consts.MEDIA_IMAGES / full_name).open('rb')
 
         with file:
             # Same here, don't modify the original object
@@ -82,10 +82,13 @@ class Image(abc.Scorable, abc.Item):
         except (IOError, ValueError) as e:
             raise ValueError('Invalid image type') from None
 
+
         name = '{}.{}'.format(utils.unique_id()[0], img.format.lower())
         sizes = (consts.ORIGINAL_IMAGE, consts.SQUARE_THUMBNAIL, consts.SHRINKED_IMAGE)
-        names = [consts.L_MEDIA_IMAGES / '{}-{}'.format(x, name) for x in sizes]
+        names = [consts.MEDIA_IMAGES / '{}-{}'.format(x, name) for x in sizes]
 
+        consts.MEDIA_IMAGES.mkdir(parents=True, exist_ok=True)
+        
         # Save full image without changin' a byte
         with names[0].open('wb') as unmodified:
             unmodified.write(content)
@@ -121,13 +124,13 @@ class Image(abc.Scorable, abc.Item):
     def setavatar(self):
         ''' `Image.setavatar` (as well as `Image.setcover`) performs only file IO 
             operations. No database stuff.'''
-        path = consts.L_MEDIA_IMAGES / '{0}-{1}'.format(consts.AVATAR , self.name)
+        path = consts.MEDIA_IMAGES / '{0}-{1}'.format(consts.AVATAR , self.name)
         if not path.exists():
             new = ImageOps.fit(self.file, (500, 500), BaseImage.ANTIALIAS)
             new.save(str(path), quality=100)
 
     def setcover(self):
-        path = consts.L_MEDIA_IMAGES / '{0}-{1}'.format(consts.COVER_IMAGE , self.name)
+        path = consts.MEDIA_IMAGES / '{0}-{1}'.format(consts.COVER_IMAGE , self.name)
         if not path.exists():
             ratio = consts.COVER_RATIO[1] / consts.COVER_RATIO[0]
             nh = math.ceil(self.file.size[0] * ratio)
@@ -147,7 +150,7 @@ class Image(abc.Scorable, abc.Item):
         valid = [x for x in ins if x.owner == acct]
 
         for name in (x.name for x in valid):
-            for file in consts.L_MEDIA_IMAGES.glob('*-' + name):
+            for file in consts.MEDIA_IMAGES.glob('*-' + name):
                 file.unlink()
 
         with acct:

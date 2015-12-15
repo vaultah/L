@@ -88,9 +88,9 @@ class ResetNoKey:
                                      reset_link=self.key, name=self.record.name)
         msg = MIMEText(html, 'html')
         msg['Subject'] = 'Password reset'
-        msg['From'] = 'accounts@{}'.format(consts.L_SMTP_HOST)
+        msg['From'] = 'accounts@{}'.format(consts.ext.SMTP_HOST)
         msg['To'] = self.record.email
-        smtp = smtplib.SMTP(consts.L_SMTP_HOST)
+        smtp = smtplib.SMTP(consts.ext.SMTP_HOST)
         smtp.send_message(msg)
         smtp.quit()
 

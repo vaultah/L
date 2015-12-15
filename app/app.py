@@ -18,7 +18,7 @@ from bottle import request, hook, default_app, get, post, \
 
 from . import jinja2htmlcompress
 env = jinja2.Environment(extensions=[jinja2htmlcompress.HTMLCompress],
-                         loader=jinja2.FileSystemLoader(str(consts.L_VIEWS)))
+                         loader=jinja2.FileSystemLoader(str(consts.VIEWS)))
 
 # Make constants global, the regex is pretty self-explanatory
 _const = re.compile('^[A-Z_]+$')
@@ -219,6 +219,7 @@ def main_api(version, part, action=None):
         return common(json=True)(func)(action=action)
 
 
+debug(True)
 application = default_app()
 
 
@@ -232,6 +233,4 @@ if __name__ == '__main__':
     if args.config is not None:
         config = Path(args.config).resolve()
         with config.open() as file:
-            # TODO: consts.config.update(json.load(file))
-            pass
-    run()
+            consts.update_ext(json.load(file))

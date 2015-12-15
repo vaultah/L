@@ -9,23 +9,15 @@ from enum import IntEnum
 
 ROOT = Path(__file__).resolve().parent.parent
 
-L_ROOT = ROOT / 'app'
-L_VIEWS = ROOT / 'dist' / 'markup'
-L_PUBLIC = ROOT / 'dist' / 'public'
+APP_ROOT = ROOT / 'app'
+VIEWS = ROOT / 'dist' / 'markup'
+PUBLIC = ROOT / 'dist' / 'public'
+MEDIA = ROOT / 'dist' / 'media'
 
 # Just the name, hence PurePaths
 ASSETS = PurePath('assets')
 
-IMAGES_DIR = 'images'
-L_MEDIA = ROOT / 'L-media'
-L_MEDIA_IMAGES = L_MEDIA / IMAGES_DIR
-
-# Create dirs
-for p in (L_MEDIA_IMAGES,):
-    try:
-        p.mkdir(parents=True)
-    except FileExistsError:
-        pass
+MEDIA_IMAGES = MEDIA / 'images'
 
 # Notifications
 
@@ -345,3 +337,26 @@ COUNTRIES = OrderedDict([
     ("zm", "Zambia"),
     ("zw", "Zimbabwe")
 ])
+
+
+# External constants
+
+_ext_defaults = {
+    'SMTP_HOST': 'localhost',
+    'HOST': 'localhost',
+    'MEDIA_HOST': 'localhost',
+}
+
+class _Ext(dict):
+
+    def __getattr__(self, attr):
+        return self.get(attr)
+
+    def __setattr__(self, attr, new):
+        self[attr] = new
+
+    def __delattr__(self, attr):
+        self.pop(attr)
+
+
+ext = _Ext(_ext_defaults)

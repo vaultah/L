@@ -31,6 +31,7 @@ def test_create(file):
         assert len(objects) == 0
 
 
+print(pytest.config.getoption('--no-urls'), pytest.config.getoption, pytest.config, type(pytest.config), pytest)
 @pytest.mark.skipif(pytest.config.getoption('--no-urls'), reason='Skipping urls')
 @pytest.mark.parametrize('url', 
     ['http://dummyimage.com/600x400/000/fff.gif',
