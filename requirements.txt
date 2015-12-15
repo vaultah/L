@@ -9,3 +9,4 @@ bcrypt
 colorama
 markdown2
 -e git+https://github.com/bottlepy/bottle.git#egg=bottle
+-e git+https://github.com/vaultah/fused.git#egg=fused

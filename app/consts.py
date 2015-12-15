@@ -345,6 +345,8 @@ _ext_defaults = {
     'SMTP_HOST': 'localhost',
     'HOST': 'localhost',
     'MEDIA_HOST': 'localhost',
+    'REDIS_MAIN_URL': 'redis://localhost',
+    'REDIS_FEED_URL': 'redis://localhost'
 }
 
 class _Ext(dict):
