@@ -19,19 +19,12 @@ from ..misc import utils, abc
 from ... import consts
 from .records import Record
 
-from bson.objectid import ObjectId
-from pymongo import MongoClient
-
 # 2 weeks
 cookie_age = 60*60*24*7*2
 # 4 hours
 session_age = 60*60*4
 # 6 hours
 reset_key_age = 60*60*6
-
-client = MongoClient()
-_db, _collection = consts.MONGO['reset']
-reset_collection = client[_db][_collection]
 
 _gen_token = functools.partial(utils.unique_hash, bits=384)
 _gen_acid = functools.partial(utils.unique_hash, bits=384)
@@ -106,7 +99,7 @@ class ResetNoKey:
         self._send(**ka)
 
 
-class Reset(abc.Pkeyed):
+class Reset:#(abc.Pkeyed):
 
     ''' Check if key is legit '''
 
@@ -134,8 +127,6 @@ class Reset(abc.Pkeyed):
 
 # TODO: Token as `Item`?
 class cookies:
-
-    collection = Record.collection.database.cookies
 
     @classmethod
     def save(cls, acid, token, acct, session=False):

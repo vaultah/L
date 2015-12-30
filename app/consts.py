@@ -70,24 +70,6 @@ DEFAULT_AVATAR = PurePath('/') / ASSETS / 'images' / 'default.png'
 BASE_CONVERSION_TABLE = string.digits + string.ascii_lowercase
 NAME_CHARACTERS = frozenset(string.ascii_letters + string.digits + '-_')
 
-# Content type -> (DB name, collections's name)
-# TODO: Currently limited to one host
-MONGO = {
-    'posts': ('media', 'published'),
-    'images': ('media', 'images'),
-    'feed': ('media', 'feed'),
-    'records': ('main', 'records'),
-    'notifications': ('main', 'notifications'),
-    'cookies': ('main', 'cookies'),
-    'reset': ('main', 'reset'),
-    'requests': ('main', 'requests'),
-    'friends': ('main', 'friends'),
-    'followers': ('main', 'followers'),
-    'blocked': ('main', 'blocked'),
-    'ratings': ('main', 'ratings'),
-}
-
-
 # OrderedDict of countries
 
 COUNTRIES = OrderedDict([

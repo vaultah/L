@@ -1,38 +1,27 @@
 from . import  wsinter
 from .accounts.profile import profile
-from .accounts.records import Record
-from .accounts import relations
+from .accounts import relations, records
 from .. import consts
 from .misc import abc, utils
 from .images import Image
 from datetime import datetime
 import itertools
-from bson.objectid import ObjectId
-from pymongo.cursor import CursorType
-from pymongo import MongoClient
 from collections import ChainMap, deque
 import collections.abc
 import threading
 # For PUSH post loading purposes
 import jinja2
 
-client = MongoClient()
-
 
 def _post_link(id):
     return '/survey/post/{}'.format(id)
 
-
-class Post(abc.Scorable, abc.Item):
+class Post(abc.Item):
 
     ''' Represents a single post 
 
         All published items are represented with this class '''
-
     type = consts.CONTENT_POST
-    _db, _collection = consts.MONGO['posts']
-    collection = client[_db][_collection]
-
 
     def __init__(self, post=None):
         self._fields = {}
@@ -41,12 +30,12 @@ class Post(abc.Scorable, abc.Item):
             post = ObjectId(post)
             result = self.collection.find_one({self.pk: post}) or {}
             if 'owner' in result:
-                result['owner'] = Record(id=result['owner'])
+                result['owner'] = records.Record(id=result['owner'])
             self._init_setfields(self, result)
 
     def _prepare(self):
-        if self.owner and not isinstance(self.owner, Record):
-            self._setfields(self, {'owner': Record(id=self.owner)})
+        if self.owner and not isinstance(self.owner, records.Record):
+            self._setfields(self, {'owner': records.Record(id=self.owner)})
 
     def is_reply(self):
         return self.base and (self.content or self.images)
@@ -55,7 +44,7 @@ class Post(abc.Scorable, abc.Item):
     def delete(cls, acct, posts):
         ''' Most of deleting actions are delayed (e.g. `delete_derived` in
             `branch`); this method makes as little changes as possible '''
-        if not isinstance(acct, Record):
+        if not isinstance(acct, records.Record):
             raise TypeError
 
         if not posts:
@@ -79,7 +68,7 @@ class Post(abc.Scorable, abc.Item):
             not images):
             raise ValueError('Post is empty')
 
-        if not isinstance(poster, Record):
+        if not isinstance(poster, records.Record):
             raise TypeError
 
         if images and not isinstance(images[0], Image):
@@ -130,9 +119,6 @@ class Post(abc.Scorable, abc.Item):
 
 class Feed:
 
-    _db, _collection = consts.MONGO['feed']
-    collection = client[_db][_collection]
-
     @classmethod
     def new(cls, posts, ids):
         # Accept iterable of instances or a single instance
@@ -168,15 +154,15 @@ class Feed:
             except TypeError:
                 ids = [ids]
             finally:
-                if not isinstance(ids[0], Record):
-                    raise ValueError('We expect Record instances') from None
+                if not isinstance(ids[0], records.Record):
+                    raise ValueError('We expect records.Record instances') from None
                 spec['acct'] = {'$in': [rec.id for rec in ids]}
 
         cls.collection.delete_many(spec)
 
     @classmethod
     def get(cls, acct, number=25, start=None):
-        if not isinstance(acct, Record):
+        if not isinstance(acct, records.Record):
             raise TypeError
 
         if start and type(start) is not ObjectId:
@@ -210,10 +196,6 @@ def push(post, tpl, **ka):
     args = ({'action': 'feed', 'ids': relations.feedgetters(post.owner),
              'markup': tpl.render(ka)},)
     threading.Thread(target=wsinter.async_send, args=args, daemon=True).start()
-
-def total():
-    return Post.collection.count()
-
 
 def derived(item, reflections=False):
     if not item.good():
@@ -324,7 +306,7 @@ def iter_info(iterable, profiles=None):
 
 
 def page(poster, number=50):
-    if not isinstance(poster, Record):
+    if not isinstance(poster, records.Record):
         raise TypeError
         
     params = {'owner': poster.id}

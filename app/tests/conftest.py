@@ -87,12 +87,12 @@ def patch_new_record():
             plaintext = None
             if 'name' not in args:
                 args['name'] = uuid4().hex
-            if 'hashed' not in args:
+            if 'pwd' not in args:
                 plaintext = uuid4().hex
                 # We need to run tests faster.
                 # This doesn't get called for authentication tests.
                 with patch.object(auth, 'BCRYPT_ROUNDS', 4):
-                    args['hashed'] = auth.hashed(plaintext)
+                    args['pwd'] = auth.hashed(plaintext)
             rec = func(**args)
             acid, token = auth._gen_acid(), auth._gen_token()
             auth.cookies.save(acct=rec, acid=acid, token=token, session=True)

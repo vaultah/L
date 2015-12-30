@@ -1,7 +1,6 @@
 pysha3
 jinja2
 pillow
-pymongo
 WebTest
 pytest
 autobahn

@@ -5,16 +5,10 @@ from .misc import utils, abc
 from .. import consts
 from .accounts.records import Record
 from . import images, posts
-from pymongo import MongoClient
-from bson.objectid import ObjectId
 from jinja2 import Template
 from jinja2.filters import do_striptags as striptags
 from string import ascii_uppercase, ascii_lowercase
 import threading
-
-client = MongoClient()
-_db, _collection = consts.MONGO['notifications']
-not_collection = client[_db][_collection]
 
 _types = [
     'mention',

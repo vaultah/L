@@ -1,4 +1,4 @@
-from .records import Record
+from . import records
 from ..misc import utils
 from .. import images
 from ... import consts
@@ -9,7 +9,7 @@ def profile(acct, *, minimal=True, public=False):
     ''' Get the profile info for `acct` and return a `dict` 
         if minimal is truthy, skip processing country, website etc. '''
             
-    if not isinstance(acct, Record):
+    if not isinstance(acct, records.Record):
         raise TypeError
         
     if not acct.good():

@@ -1,15 +1,5 @@
-from .records import Record
+from . import records
 from ... import consts
-from bson.objectid import ObjectId
-from pymongo.cursor import CursorType
-from pymongo import MongoClient
-
-client = MongoClient()
-
-_db, _collection = consts.MONGO['followers']
-followers_collection = client[_db][_collection]
-_db, _collection = consts.MONGO['blocked']
-block_collection = client[_db][_collection]
 
 # 'req' = 'requester'
 # 'sub' = 'subject'
@@ -17,7 +7,7 @@ block_collection = client[_db][_collection]
 # FOLLOWERS
 
 def follow(req, sub):
-    if not (isinstance(req, Record) and isinstance(sub, Record)):
+    if not (isinstance(req, records.Record) and isinstance(sub, records.Record)):
         raise TypeError
     followers_collection.insert_one({'req': req.id, 'sub': sub.id})
     with sub as record:
@@ -25,7 +15,7 @@ def follow(req, sub):
 
 
 def unfollow(req, sub):
-    if not (isinstance(req, Record) and isinstance(sub, Record)):
+    if not (isinstance(req, records.Record) and isinstance(sub, records.Record)):
         raise TypeError
     followers_collection.delete_one({'req': req.id, 'sub': sub.id})
     with sub as record:
@@ -33,14 +23,14 @@ def unfollow(req, sub):
 
 
 def is_follower(req, sub):
-    if not (isinstance(req, Record) and isinstance(sub, Record)):
+    if not (isinstance(req, records.Record) and isinstance(sub, records.Record)):
         raise TypeError
     match = followers_collection.find_one({'req': req.id, 'sub': sub.id})
     return match is not None
 
 
 def are_friends(*a):
-    if not all(isinstance(x, Record) for x in a):
+    if not all(isinstance(x, records.Record) for x in a):
         raise TypeError
     if len(a) != 2:
         raise ValueError('Exactly 2 arguments are required')
@@ -52,21 +42,21 @@ def are_friends(*a):
 
 def is_blocked(req, sub):
 
-    if not (isinstance(req, Record) and isinstance(sub, Record)):
+    if not (isinstance(req, records.Record) and isinstance(sub, records.Record)):
         raise TypeError
     res = block_collection.find_one({'req': req.id, 'sub': sub.id})
     return res is not None
 
 
 def block(req, sub):
-    if not (isinstance(req, Record) and isinstance(sub, Record)):
+    if not (isinstance(req, records.Record) and isinstance(sub, records.Record)):
         raise TypeError
     res = block_collection.insert_one({'req': req.id, 'sub': sub.id})
     return res.inserted_id is not None
 
 
 def unblock(req, sub):
-    if not (isinstance(req, Record) and isinstance(sub, Record)):
+    if not (isinstance(req, records.Record) and isinstance(sub, records.Record)):
         raise TypeError
     res = block_collection.delete_one({'req': req.id, 'sub': sub.id})
     return res.deleted_count == 1
@@ -75,7 +65,7 @@ def unblock(req, sub):
     
 def feedgetters(acct):
     ''' Get the tuple of ids of all friends and followers of `acct` '''
-    if not isinstance(acct, Record):
+    if not isinstance(acct, records.Record):
         raise TypeError
     cur = followers_collection.find({'sub': acct.id},
                                     cursor_type=CursorType.EXHAUST,

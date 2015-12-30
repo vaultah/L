@@ -8,24 +8,17 @@ import functools
 
 from .. import consts
 from .misc import utils, abc
-from .accounts.records import Record
+from .accounts import records
 
 import jinja2
-from bson.objectid import ObjectId
-from pymongo import MongoClient
 
-client = MongoClient()
-
-
-class Image(abc.Scorable, abc.Item):
+class Image(abc.Item):
 
     ''' Represents a single image. 
         The implementation is similar to `posts.Post`.  '''
 
     _allowed = {'JPEG', 'PNG'}
     type = consts.CONTENT_IMAGE
-    _db, _collection = consts.MONGO['images']
-    collection = client[_db][_collection]
 
     def __init__(self, image=None, file=False):
         ''' Getting truthy `file` requires loading the image from disc. Don't do
@@ -40,8 +33,8 @@ class Image(abc.Scorable, abc.Item):
             self._init_setfields(self, data)
 
     def _prepare(self):
-        if self.owner and not isinstance(self.owner, Record):
-            self._setfields(self, {'owner': Record(id=self.owner)})
+        if self.owner and not isinstance(self.owner, records.Record):
+            self._setfields(self, {'owner': records.Record(id=self.owner)})
 
     @classmethod
     def _load_file(cls, file):
@@ -139,7 +132,7 @@ class Image(abc.Scorable, abc.Item):
 
     @classmethod
     def delete(cls, acct, images):
-        if not isinstance(acct, Record):
+        if not isinstance(acct, records.Record):
             raise TypeError
 
         if not images:
@@ -162,7 +155,7 @@ class Image(abc.Scorable, abc.Item):
         ''' `images` is an iterable of file objects or strings.
             Strings are treated as URLs '''
         
-        if not isinstance(acct, Record):
+        if not isinstance(acct, records.Record):
             raise TypeError
 
         if not images:
@@ -196,7 +189,7 @@ def urls_dict(name, types=()):
 
 
 def raw(acct, number=50, files=False):
-    if not isinstance(acct, Record):
+    if not isinstance(acct, records.Record):
         raise TypeError
 
     imgs = Image.collection.find({'owner': acct.id})
