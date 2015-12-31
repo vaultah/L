@@ -94,10 +94,11 @@ def patch_new_record():
                 with patch.object(auth, 'BCRYPT_ROUNDS', 4):
                     args['pwd'] = auth.hashed(plaintext)
             rec = func(**args)
-            acid, token = auth._gen_acid(), auth._gen_token()
-            auth.cookies.save(acct=rec, acid=acid, token=token, session=True)
-            return rec.add({'plaintext_pwd': plaintext,
-                            'cookies': {'acid': acid, 'token': token}})
+            acid = auth.ACID.new(id=auth._gen_acid())
+            token = acid.add_token(rec, session=True)
+            rec.plaintext_pwd = plaintext
+            rec.cookies = {'acid': acid, 'token': token}
+            return rec
         return wrapper
 
     with patch.object(Record, 'new', _decorate(Record.new)):

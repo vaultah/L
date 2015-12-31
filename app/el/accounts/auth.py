@@ -11,9 +11,10 @@ import bcrypt
 import jinja2
 import functools
 from operator import attrgetter
-from itertools import groupby
+from itertools import groupby, chain
 import base64
 from collections import namedtuple
+from fused import fields
 
 from ..misc import utils, abc
 from ... import consts
@@ -123,46 +124,60 @@ class Reset:#(abc.Pkeyed):
 
     def good(self): 
         return self._exists
-        
 
-# TODO: Token as `Item`?
-class cookies:
 
-    @classmethod
-    def save(cls, acid, token, acct, session=False):
+TokenTuple = namedtuple('TokenTuple', ['token', 'record', 'ttl', 'is_session'])
+
+
+class ACID(abc.Item):
+
+    id = fields.PrimaryKey() # different from implementation in abc.Item
+    # Store cookies and sessions in separate Sorted Sets
+    cookies = fields.SortedSet(standalone=True)
+    sessions = fields.SortedSet(standalone=True)
+    # Map tokens to accounts
+    tokens = fields.Hash(standalone=True)
+
+    def add_token(self, acct, token=None, session=False, score=None):
         if not isinstance(acct, Record):
             raise TypeError
 
-        cls.collection.insert_one({'account': acct.id, 'token': token,
-                                   'acid': acid, 'session': bool(session)})
-    @classmethod
-    def delete_acid(cls, acid):
-        cls.collection.delete_many({'acid': acid})
+        if score is None:
+            score = time.time()
 
-    @classmethod
-    def delete_tokens(cls, tokens):
-        cls.collection.delete_many({'token': {'$in': list(tokens)}})
+        if token is None:
+            token = _gen_token()
 
-    @classmethod
-    def get_by_acid(cls, acid):
-        data = cls.collection.find({'acid': acid})
-        yield from data.sort([('$natural', 1)])
+        with self:
+            (self.sessions if session else self.cookies).zadd(score, token)
+            self.tokens.hset(token, acct.id)
 
-    @classmethod
-    def generate_and_save(cls, **ka):
-        if 'acid' not in ka:
-            ka['acid'] = _gen_acid()
+        return token
 
-        if 'token' not in ka:
-            ka['token'] = _gen_token()
+    def delete_tokens(self, *tokens):
+        with self:
+            self.tokens.hdel(*tokens)
+            self.sessions.zrem(*tokens)
+            self.cookies.zrem(*tokens)
 
-        cls.save(**ka)
-        return ka['acid'], ka['token']
+    def all_tokens(self):
+        with self:
+            self.cookies.zrange(0, -1, withscores=True)
+            self.sessions.zrange(0, -1, withscores=True)
+            self.tokens.hgetall()
+            cookies, sessions, map = self.redis.execute()
+
+        for token, timestamp in cookies:
+            ttl = timestamp - time.time() + cookie_age
+            yield TokenTuple(token, Record(id=map[token]), ttl, False)
+
+        for token, timestamp in sessions:
+            ttl = timestamp - time.time() + session_age
+            yield TokenTuple(token, Record(id=map[token]), ttl, True)
 
 
 class Current:
 
-    _tup_cls = namedtuple('TokenTuple', ['token', 'record', 'ttl', 'is_session'])
 
     def __init__(self, acid, token):
         # Set defaults
@@ -182,35 +197,30 @@ class Current:
     def _logged(self, acid, token):
         if acid is None:
             return False
-
-        rows = list(cookies.get_by_acid(acid))
-
-        if not rows:
+        
+        acid = ACID(id=acid)
+        if not acid.good():
             return False
 
-        def _make_ntuple(x):
-            # Calculate TTL
-            ts = datetime.datetime.timestamp(x['_id'].generation_time)
-            is_session = x.get('session', False)
-            ttl = ts - time.time() + (session_age if is_session else cookie_age)
-            # Load record, construct instance, add instance to dicts
-            token, record = x['token'], Record(id=x['account'])
-            o = self._tup_cls(token, record, ttl, is_session)
-            if o.ttl > 0:
-                self.records[record] = o
-                self.tokens[token] = o
-            return o
+        tokens = set(acid.all_tokens())
+        if not tokens:
+            return False
 
-        tups = {_make_ntuple(x) for x in rows}
-        uptodate = {x for x in tups if x.ttl > 0}
+        uptodate = set()
+
+        for t in tokens:
+            if t.ttl > 0:
+                uptodate.add(t)
+                self.records[t.record] = t
+                self.tokens[t.token] = t
 
         # No tokens left, delete the ACID
         if not uptodate:
-            cookies.delete_acid(acid)
+            acid.delete()
             return False
 
         # Delete the outdated tokens
-        cookies.delete_tokens([x.token for x in tups - uptodate])
+        acid.delete_tokens(*tokens - uptodate)
         
         # Get max ttl and the corresponsing namedtuple instance
         self.max_ttl, self.last = max((x.ttl, x) for x in uptodate)

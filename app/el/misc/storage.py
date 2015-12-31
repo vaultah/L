@@ -1,10 +1,10 @@
 from ... import consts
-from redis import Redis
+from redis import StrictRedis
 
 
 def get_main_connection():
-    return Redis.from_url(consts.ext.REDIS_MAIN_URL)
+    return StrictRedis.from_url(consts.ext.REDIS_MAIN_URL)
 
 
 def get_feed_connection():
-    return Redis.from_url(consts.ext.REDIS_FEED_URL)
+    return StrictRedis.from_url(consts.ext.REDIS_FEED_URL)

@@ -55,13 +55,15 @@ def test_cookies():
     account = Record.new()
     # No distinction between real cookies and session
     acid, *tokens = (utils.unique_hash() for _ in range(3))
+    acid = auth.ACID.new(id=acid)
     for token in tokens:
-        auth.cookies.save(acct=account, acid=acid, token=token)
+        acid.add_token(account, token)
 
-    it = auth.cookies.get_by_acid(acid)
+    it = acid.all_tokens()
     assert sum(1 for _ in it) == len(tokens)
-    auth.cookies.delete_tokens(tokens)
-    assert next(auth.cookies.get_by_acid(acid), None) is None
+    acid.delete_tokens(*tokens)
+    with pytest.raises(StopIteration):
+        next(acid.all_tokens())
 
 
 def test_current(monkeypatch):
