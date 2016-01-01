@@ -4,8 +4,8 @@ import collections
 from fused import fields
 from .. import posts
 
+
 class Record(abc.Item):
-    
     name = fields.String(unique=True, required=True)
     pwd = fields.Bytes(required=True)
     email = fields.String(unique=True)

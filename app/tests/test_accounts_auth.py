@@ -54,7 +54,7 @@ def test_hashing(pwd):
 def test_cookies():
     account = Record.new()
     # No distinction between real cookies and session
-    acid, *tokens = (utils.unique_hash() for _ in range(3))
+    acid, *tokens = (utils.unique_hash() for _ in range(5))
     acid = auth.ACID.new(id=acid)
     for token in tokens:
         acid.add_token(account, token)

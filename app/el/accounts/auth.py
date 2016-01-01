@@ -151,7 +151,6 @@ class ACID(abc.Item):
         with self:
             (self.sessions if session else self.cookies).zadd(score, token)
             self.tokens.hset(token, acct.id)
-
         return token
 
     def delete_tokens(self, *tokens):

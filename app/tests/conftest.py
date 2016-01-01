@@ -38,9 +38,9 @@ class Memorize(collections.abc.Iterator):
 
 
 def pytest_addoption(parser):
-    parser.addoption('--no-send', action='store_true',
+    parser.addoption('--no-send', action='store_true', default=False,
                      help='Don\'t send mail during the tests') 
-    parser.addoption('--no-urls', action='store_true',
+    parser.addoption('--no-urls', action='store_true', default=False,
                      help='Do not test downloading from urls')
     parser.addoption('--send-to', action='store', help='Send mail to this address',
                      default='flwaultah@gmail.com') 
