@@ -58,80 +58,64 @@ def signup(name, pwd):
     return Record.new(name, hashed(pwd))        
 
 
-class ResetNoKey:
+class ResetKey(abc.Item):
 
-    ''' Validate provided info and send an email with a key. '''
+    account = fields.Foreign('Record', required=True)
+    time = fields.Field(required=True) # TODO: fused float
 
-    def __init__(self, **ka):
-        # Just one of the arguments has to be provided
-        if len(ka) != 1:
-            raise ValueError('Too many arguments')
+    def __init__(self, *a, **ka):
+        super().__init__(*a, **ka)
+        if self.good() and float(self.time) < time.time() - reset_key_age:
+            self.delete()
 
-        self.record = ka.get('acct') or Record(**ka)
-
-    def _send(self, **ka):
+    def send(self, **ka):
         # FIXME: Handle exceptions
         if not isinstance(ka.get('template'), jinja2.Template):
             raise TypeError('Expected jinja2.Temlate')
 
         contents = ["We've received a request to reset your password, so here we are. "
                     "The link below is active for 6 hours.",
-                    "Email was sent to {}.".format(self.record.email)]
+                    "Email was sent to {}.".format(self.account.email)]
 
         html = ka['template'].render(contents=contents, host=ka['host'],
-                                     reset_link=self.key, name=self.record.name)
+                                     reset_link=self.id, name=self.account.name)
         msg = MIMEText(html, 'html')
         msg['Subject'] = 'Password reset'
         msg['From'] = 'accounts@{}'.format(consts.ext.SMTP_HOST)
-        msg['To'] = self.record.email
+        msg['To'] = self.account.email
         smtp = smtplib.SMTP(consts.ext.SMTP_HOST)
         smtp.send_message(msg)
         smtp.quit()
 
-    def _generate_key(self):
-        self.key = utils.unique_hash()
-        reset_collection.insert_one({'account': self.record.id, 'key': self.key})
+    @classmethod
+    def new_from_unique(cls, name=None, email=None, account=None, **ka):
+        # TODO: Optimize
+        if account is not None:
+            ka['account'] = account
+        elif name is not None:
+            ka['account'] = Record(name=name)
+        elif email is not None:
+            ka['account'] = Record(email=email)
+        else:
+            raise ValueError
+        ka['account'] = ka['account'].id
+        return cls.new(**ka)
 
-    def good(self):
-        return self.record.good()
+    @classmethod
+    def new(cls, **ka):
+        if 'id' not in ka:
+            ka['id'] = utils.unique_hash()
 
-    def send(self, **ka):
-        self._generate_key()
-        self._send(**ka)
+        if 'time' not in ka:
+            ka['time'] = time.time()
 
-
-class Reset:#(abc.Pkeyed):
-
-    ''' Check if key is legit '''
-
-    def __init__(self, key):
-        self.key = key
-        self._exists = self._check_key()
-
-    def _check_key(self):
-        data = reset_collection.find_one({'key': self.key})
-        if data:
-            gentime = datetime.datetime.timestamp(data[self.pk].generation_time)
-            # One-off, literally
-            self._delete_key()
-            if gentime >= time.time() - reset_key_age:
-                return True
-
-        return False
-
-    def _delete_key(self):
-        reset_collection.delete_one({'key': self.key})
-
-    def good(self): 
-        return self._exists
+        return super().new(**ka)
 
 
 TokenTuple = namedtuple('TokenTuple', ['token', 'record', 'ttl', 'is_session'])
 
 
 class ACID(abc.Item):
-
-    id = fields.PrimaryKey() # different from implementation in abc.Item
     # Store cookies and sessions in separate Sorted Sets
     cookies = fields.SortedSet(standalone=True)
     sessions = fields.SortedSet(standalone=True)

@@ -147,14 +147,11 @@ def test_reset():
         # Set the one we can actually check
         account.email = pytest.config.getoption('--send-to')
 
-    for reset in ({'name': account.name}, {'email': account.email}, {'acct': account}):
-        inst = auth.ResetNoKey(**reset)
+    for reset in ({'name': account.name}, {'email': account.email}, {'account': account}):
+        inst = auth.ResetKey.new_from_unique(**reset)
         assert inst.good()
         
-        if pytest.config.getoption('--no-send'):
-            # set .key anyway
-            inst._generate_key()
-        else:
+        if not pytest.config.getoption('--no-send'):
             try:
                 with (consts.VIEWS / 'email' / 'password-reset.html').open() as tf:
                     # No need to load environment
@@ -163,6 +160,8 @@ def test_reset():
                 warnings.warn('Templates are not available.'
                               'Run `gulp` to prepare them.')
 
-        assert auth.Reset(inst.key).good()
+        assert auth.ResetKey(id=inst.id).good()
         # Must not be able to reuse
-        assert not auth.Reset(inst.key).good()
+        key = inst.id
+        inst.delete()
+        assert not auth.ResetKey(id=key).good()
