@@ -8,6 +8,7 @@ import time
 import uuid
 from jinja2 import Template
 from pathlib import Path
+import warnings
 
 
 def time_machine(forward):
@@ -72,15 +73,17 @@ def test_current(monkeypatch):
     # Split the list (aproximatly) in half and save the tokens
     cookies, sessions = [tokens[0]], [tokens[-1]]
 
+    acid = auth.ACID.new(id=acid)
+
     for x in cookies:
-        auth.cookies.save(acct=account, acid=acid, token=x)
+        acid.add_token(account, x)
 
     for x in sessions:
-        auth.cookies.save(acct=account, acid=acid, token=x, session=True)
+        acid.add_token(account, x, session=True)
 
     # Test the attributes and the return value
     for token in tokens:
-        current = auth.Current(token=token, acid=acid)
+        current = auth.Current(token=token, acid=acid.id)
         assert current.loggedin
         assert not current.multi
         assert current.record == account
@@ -89,14 +92,14 @@ def test_current(monkeypatch):
     # Test session lifetime
     monkeypatch.setattr('time.time', session_time)
     for token in sessions:
-        current = auth.Current(token=token, acid=acid)
+        current = auth.Current(token=token, acid=acid.id)
         assert not current.loggedin
         assert not current.multi
 
     # Test cookie lifetime
     monkeypatch.setattr('time.time', cookie_time)
     for token in cookies:
-        current = auth.Current(token=token, acid=acid)
+        current = auth.Current(token=token, acid=acid.id)
         assert not current.loggedin
         assert not current.multi
 
@@ -107,19 +110,20 @@ def test_multilogin(monkeypatch):
     ids = {acct1.id, acct2.id}
     acid, token1, token2 = (utils.unique_hash() for _ in range(3))
 
+    acid = auth.ACID.new(id=acid)
     # Save the first token
-    auth.cookies.save(acct=acct1, token=token1, acid=acid)
+    acid.add_token(acct1, token1)
     # Save the second token (with different lifetime)
-    auth.cookies.save(acct=acct2, token=token2, acid=acid, session=True)
+    acid.add_token(acct2, token2, session=True)
 
     # Both tokens must work correctly
-    current = auth.Current(token=token1, acid=acid)
+    current = auth.Current(token=token1, acid=acid.id)
     assert current.loggedin
     assert current.record == acct1
     assert current.multi
     assert {x.id for x in current.records} == ids
 
-    current = auth.Current(token=token2, acid=acid)
+    current = auth.Current(token=token2, acid=acid.id)
     assert current.loggedin
     assert current.record == acct2
     assert current.multi
@@ -127,12 +131,12 @@ def test_multilogin(monkeypatch):
 
     # Test tokens' lifetime
     monkeypatch.setattr('time.time', session_time)
-    current = auth.Current(token=token2, acid=acid)
+    current = auth.Current(token=token2, acid=acid.id)
     assert not current.loggedin
     assert not current.multi
 
     monkeypatch.setattr('time.time', cookie_time)
-    current = auth.Current(token=token1, acid=acid)
+    current = auth.Current(token=token1, acid=acid.id)
     assert not current.loggedin
     assert not current.multi
 
@@ -151,11 +155,14 @@ def test_reset():
             # set .key anyway
             inst._generate_key()
         else:
-            with (consts.VIEWS / 'email' / 'password-reset.html').open() as tf:
-                # No need to load environment
-                inst.send(host='not_critical', template=Template(tf.read()))
+            try:
+                with (consts.VIEWS / 'email' / 'password-reset.html').open() as tf:
+                    # No need to load environment
+                    inst.send(host='not_critical', template=Template(tf.read()))
+            except FileNotFoundError:
+                warnings.warn('Templates are not available.'
+                              'Run `gulp` to prepare them.')
 
         assert auth.Reset(inst.key).good()
         # Must not be able to reuse
         assert not auth.Reset(inst.key).good()
-

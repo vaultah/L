@@ -15,3 +15,7 @@ class Item(Model):
             # FIXME:
             ka['id'] = str(time.time())
         return super().new(**ka)
+
+
+    def __hash__(self):
+    	return hash((type(self), self.primary_key))

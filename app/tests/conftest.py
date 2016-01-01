@@ -10,6 +10,7 @@ from http import cookiejar
 from unittest.mock import patch
 from itertools import cycle, chain, count
 
+from app.el.misc import storage
 from app.el.accounts import auth
 from app.el.accounts.records import Record
 from app.el.images import Image
@@ -46,9 +47,11 @@ def pytest_addoption(parser):
                      default='flwaultah@gmail.com') 
 
 
-# @pytest.yield_fixture(autouse=True, scope='session')
-# def temp_db(request):
-#     yield 1
+@pytest.fixture(autouse=True)
+def flushdb():
+    for name, ob in vars(storage).items():
+        if callable(ob) and 'get_' in name and '_connection' in name:
+            ob().flushdb()
 
 
 def _close_all(files):

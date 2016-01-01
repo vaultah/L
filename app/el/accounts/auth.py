@@ -151,6 +151,7 @@ class ACID(abc.Item):
         with self:
             (self.sessions if session else self.cookies).zadd(score, token)
             self.tokens.hset(token, acct.id)
+
         return token
 
     def delete_tokens(self, *tokens):
@@ -168,11 +169,13 @@ class ACID(abc.Item):
 
         for token, timestamp in cookies:
             ttl = timestamp - time.time() + cookie_age
-            yield TokenTuple(token, Record(id=map[token]), ttl, False)
+            yield TokenTuple(self._from(fields.String, token),
+                             Record(id=map[token]), ttl, False)
 
         for token, timestamp in sessions:
             ttl = timestamp - time.time() + session_age
-            yield TokenTuple(token, Record(id=map[token]), ttl, True)
+            yield TokenTuple(self._from(fields.String, token),
+                             Record(id=map[token]), ttl, True)
 
 
 class Current:
@@ -217,9 +220,9 @@ class Current:
         if not uptodate:
             acid.delete()
             return False
-
-        # Delete the outdated tokens
-        acid.delete_tokens(*tokens - uptodate)
+        elif len(uptodate) < len(tokens):
+            # Delete the outdated tokens
+            acid.delete_tokens(*tokens - uptodate)
         
         # Get max ttl and the corresponsing namedtuple instance
         self.max_ttl, self.last = max((x.ttl, x) for x in uptodate)
