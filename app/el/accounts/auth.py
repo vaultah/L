@@ -55,7 +55,7 @@ def signin(acct, pwd):
 
 
 def signup(name, pwd):
-    return Record.new(name, hashed(pwd))        
+    return Record.new(name=name, pwd=hashed(pwd))        
 
 
 class ResetKey(abc.Item):
