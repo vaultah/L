@@ -153,12 +153,12 @@ class ACID(abc.Item):
 
         for token, timestamp in cookies:
             ttl = timestamp - time.time() + cookie_age
-            yield TokenTuple(self._from(fields.String, token),
+            yield TokenTuple(self.decode(fields.String, token),
                              Record(id=map[token]), ttl, False)
 
         for token, timestamp in sessions:
             ttl = timestamp - time.time() + session_age
-            yield TokenTuple(self._from(fields.String, token),
+            yield TokenTuple(self.decode(fields.String, token),
                              Record(id=map[token]), ttl, True)
 
 

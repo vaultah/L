@@ -100,7 +100,7 @@ def patch_new_record():
             acid = auth.ACID.new(id=auth._gen_acid())
             token = acid.add_token(rec, session=True)
             rec.plaintext_pwd = plaintext
-            rec.cookies = {'acid': acid, 'token': token}
+            rec.cookies = {'acid': acid.id, 'token': token}
             return rec
         return wrapper
 
