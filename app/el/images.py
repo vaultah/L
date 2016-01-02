@@ -9,61 +9,63 @@ import functools
 from .. import consts
 from .misc import utils, abc
 from .accounts import records
-
+from fused import fields
 import jinja2
+
 
 class Image(abc.Item):
 
-    ''' Represents a single image. 
-        The implementation is similar to `posts.Post`.  '''
-
     _allowed = {'JPEG', 'PNG'}
     type = consts.CONTENT_IMAGE
+    owner = fields.Foreign(records.Record, required=True)
+    name = fields.String(required=True)
 
-    def __init__(self, image=None, file=False):
-        ''' Getting truthy `file` requires loading the image from disc. Don't do
-            that unless you're sure you need the image object. '''
-        self._fields = {}
-        self.derived = []
-        if image:
-            image = ObjectId(image)
-            data = self.collection.find_one({self.pk: image}) or {}
-            if data and file:
-                data['file'] = self._load_file(data['name'])
-            self._init_setfields(self, data)
-
-    def _prepare(self):
-        if self.owner and not isinstance(self.owner, records.Record):
-            self._setfields(self, {'owner': records.Record(id=self.owner)})
+    def __init__(self, load_file=False, **ka):
+        super().__init__(**ka)
+        if load_file:
+            self.file = self._load_file(self.name)
 
     @classmethod
-    def _load_file(cls, file):
+    def _load_file(cls, name):
         # Check if we can skip loading the file from disk
-        if not isinstance(file, io.IOBase):
-            full_name = '{0}-{1}'.format(consts.ORIGINAL_IMAGE, file)
-            file = (consts.MEDIA_IMAGES / full_name).open('rb')
+        if not isinstance(name, io.IOBase):
+            full_name = '{0}-{1}'.format(consts.ORIGINAL_IMAGE, name)
+            name = (consts.MEDIA_IMAGES / full_name).open('rb')
 
-        with file:
+        with name:
             # Same here, don't modify the original object
-            content = file.read()
-            file.seek(0)
+            with utils.keep_file_position(name):
+                content = name.read()
             return BaseImage.open(io.BytesIO(content))
 
     @staticmethod
-    def _download(url):
+    def _download_file(url):
         if not urllib.parse.urlparse(url)[0]:
             url = 'http://{}'.format(url)
 
         return io.BytesIO(urllib.request.urlopen(url, timeout=10).read())
 
-    @classmethod
-    def _store_n_link(cls, acct, file, allow_gif=False):
-        # `file` argument must be provided
-        content = file.read()
-        # Keep the original object unmodified.
-        # It won't be used anywhere in this function
-        file.seek(0)
+    def setavatar(self):
+        ''' `Image.setavatar` (as well as `Image.setcover`) performs only file IO 
+            operations. No database stuff.'''
+        path = consts.MEDIA_IMAGES / '{0}-{1}'.format(consts.AVATAR , self.name)
+        if not path.exists():
+            new = ImageOps.fit(self.file, (500, 500), BaseImage.ANTIALIAS)
+            new.save(str(path), quality=100)
 
+    def setcover(self):
+        path = consts.MEDIA_IMAGES / '{0}-{1}'.format(consts.COVER_IMAGE , self.name)
+        if not path.exists():
+            ratio = consts.COVER_RATIO[1] / consts.COVER_RATIO[0]
+            nh = math.ceil(self.file.size[0] * ratio)
+            cr = ImageOps.fit(self.file, (self.file.size[0], nh), BaseImage.ANTIALIAS)
+            cr.save(str(path), quality=100)
+
+    @classmethod
+    def _store(cls, acct, file, allow_gif):
+        # `file` argument must be provided
+        with utils.keep_file_position(file):
+            content = file.read()
         if len(content) > consts.MAX_IMAGE_SIZE:
             raise ValueError('Image is too large')
 
@@ -100,35 +102,7 @@ class Image(abc.Item):
             with names[2].open('wb') as shrinked:
                 shrinked.write(content)
 
-        # Link the image to `acct`, create a new `Image` instance and return it
-        data = {'name': name, 'owner': acct.id, 'id': utils.unique_id()[0], 'score': 0}
-        cls.collection.insert_one(data)
-        data['owner'] = acct
-        data['file'] = img
-        return data
-
-    @classmethod
-    def fromdata(cls, data, file=False):
-        if file:
-            data['file'] = cls._load_file(data['name'])
-        # I think it's okay to go against DRY now
-        return cls._init_setfields(cls(), data)
-
-    def setavatar(self):
-        ''' `Image.setavatar` (as well as `Image.setcover`) performs only file IO 
-            operations. No database stuff.'''
-        path = consts.MEDIA_IMAGES / '{0}-{1}'.format(consts.AVATAR , self.name)
-        if not path.exists():
-            new = ImageOps.fit(self.file, (500, 500), BaseImage.ANTIALIAS)
-            new.save(str(path), quality=100)
-
-    def setcover(self):
-        path = consts.MEDIA_IMAGES / '{0}-{1}'.format(consts.COVER_IMAGE , self.name)
-        if not path.exists():
-            ratio = consts.COVER_RATIO[1] / consts.COVER_RATIO[0]
-            nh = math.ceil(self.file.size[0] * ratio)
-            cr = ImageOps.fit(self.file, (self.file.size[0], nh), BaseImage.ANTIALIAS)
-            cr.save(str(path), quality=100)
+        return name
 
     @classmethod
     def delete(cls, acct, images):
@@ -151,48 +125,20 @@ class Image(abc.Item):
             acct.images -= op.deleted_count
 
     @classmethod
-    def new(cls, acct, images, allow_gif=False):
-        ''' `images` is an iterable of file objects or strings.
-            Strings are treated as URLs '''
-        
+    def new(cls, acct, image, allow_gif=False):        
         if not isinstance(acct, records.Record):
             raise TypeError
 
-        if not images:
-            raise ValueError('No data supplied')
-
-        with acct:
-            for img in images:
-                if isinstance(img, str):
-                    # _download doesn't track exceptions
-                    try:
-                        img = cls._download(img)
-                    except (urllib.error.URLError,) as e:
-                        continue
-                try:
-                    data = cls._store_n_link(acct, img, allow_gif)
-                except (ValueError, IOError) as e: # Invalid image
-                    continue
-                else:
-                    acct.images += 1
-                    yield cls.fromdata(data)
-
-    def __repr__(self):
-        pat = '<Image object at {addr:#x}: {self.pk}={self.id}>'
-        mapping = {'addr': id(self), 'self': self}
-        return pat.format(**mapping)
+        if isinstance(image, str):
+            # _download_file doesn't track exceptions
+            image = cls._download_file(image)
+        
+        name = cls._store(acct, image, allow_gif)
+        new = super().new(owner=acct.id, name=name)
+        # acct.add_image(new)
+        return new
                 
 
 def urls_dict(name, types=()):
     func = functools.partial(utils.image_url, name=name)
     return {x: func(type=x) for x in types}
-
-
-def raw(acct, number=50, files=False):
-    if not isinstance(acct, records.Record):
-        raise TypeError
-
-    imgs = Image.collection.find({'owner': acct.id})
-    # Returns instances
-    fromdata = functools.partial(Image.fromdata, file=files)
-    yield from map(fromdata, imgs.sort([('$natural', -1)]).limit(number))

@@ -17,25 +17,7 @@ def _post_link(id):
     return '/survey/post/{}'.format(id)
 
 class Post(abc.Item):
-
-    ''' Represents a single post 
-
-        All published items are represented with this class '''
     type = consts.CONTENT_POST
-
-    def __init__(self, post=None):
-        self._fields = {}
-        self.derived = []
-        if post:
-            post = ObjectId(post)
-            result = self.collection.find_one({self.pk: post}) or {}
-            if 'owner' in result:
-                result['owner'] = records.Record(id=result['owner'])
-            self._init_setfields(self, result)
-
-    def _prepare(self):
-        if self.owner and not isinstance(self.owner, records.Record):
-            self._setfields(self, {'owner': records.Record(id=self.owner)})
 
     def is_reply(self):
         return self.base and (self.content or self.images)
@@ -109,13 +91,6 @@ class Post(abc.Item):
         #     th.start()
 
         return instance
-
-    def __repr__(self):
-        pat = ('<Post object at {addr:#x}: {self.pk}={self.id!r} images={images} '
-               'base={self.base}>')
-        mapping = {'addr': id(self), 'self': self, 'images': len(self.images or ())}
-        return pat.format_map(mapping)
-
 
 class Feed:
 
@@ -303,12 +278,3 @@ def iter_info(iterable, profiles=None):
         post.add(temp)
 
     return iterable
-
-
-def page(poster, number=50):
-    if not isinstance(poster, records.Record):
-        raise TypeError
-        
-    params = {'owner': poster.id}
-    cur = Post.collection.find(params).limit(number).sort([('$natural', -1)])
-    yield from (Post.fromdata(x) for x in cur)

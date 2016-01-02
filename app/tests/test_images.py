@@ -1,8 +1,9 @@
 import pytest
 import webtest
 from pathlib import Path
-from app.el.images import Image, raw as load_raw
+from app.el.images import Image
 from app.el.accounts.records import Record
+import urllib.error
 
 files = Path(__file__).parent / 'images'
 
@@ -14,9 +15,13 @@ files = Path(__file__).parent / 'images'
 def test_create(file):
     acct = Record.new()
     with file.open('rb') as file1, file.open('rb') as file2:
-        gen = Image.new(acct, [file1, file2],
-                        allow_gif=file.suffix == '.gif')
-        objects = list(gen)
+        objects = []
+        for f in [file1, file2]:
+            try:
+                objects.append(Image.new(acct, file1,
+                                            allow_gif=file.suffix == '.gif'))
+            except ValueError:
+                continue
     assert len(objects)
     # True with allow_gif = True
     assert len(objects) == 2
@@ -26,9 +31,8 @@ def test_create(file):
 
     if file.suffix == '.gif':
         with file.open('rb') as f:
-            objects = list(Image.new(acct, [f], allow_gif=False))
-        assert not objects
-        assert len(objects) == 0
+            with pytest.raises(ValueError):
+                Image.new(acct, f, allow_gif=False)
 
 
 @pytest.mark.skipif(pytest.config.getoption('--no-urls'), reason='Skipping urls')
@@ -42,24 +46,34 @@ def test_create(file):
 def test_downloading(url):
     acct = Record.new()
     # Working links
-    downloaded = list(Image.new(acct, [url], allow_gif=True))
-    assert len(downloaded)
-    assert len(downloaded) == 1
-    assert all(isinstance(x, Image) for x in downloaded)
-    assert all(x.owner == acct for x in downloaded)
-    assert all(x.good() for x in downloaded)
+    downloaded = Image.new(acct, url, allow_gif=True)
+    assert downloaded.good()
+    assert downloaded.owner == acct
+    assert isinstance(downloaded, Image)
 
 
 @pytest.mark.skipif(pytest.config.getoption('--no-urls'), reason='Skipping urls')
 @pytest.mark.parametrize('url',
-    ['http://dummyimage.com', '', 'nonsense'],
-    ids=['HTML page', 'Empty string', 'nonsense']
+    ['', 'nonsense'],
+    ids=['Empty string', 'nonsense']
 )
 @pytest.mark.slow
 def test_downloading_bad_urls(url):
     acct = Record.new()
-    bad = list(Image.new(acct, [url], allow_gif=True))
-    assert not bad # ♬ Not baaaaaad at a-a-a-all ♬
+    with pytest.raises(urllib.error.URLError):
+        Image.new(acct, url, allow_gif=True)
+
+
+@pytest.mark.skipif(pytest.config.getoption('--no-urls'), reason='Skipping urls')
+@pytest.mark.parametrize('url',
+    ['http://dummyimage.com'], # TODO: Add more types?
+    ids=['HTML page']
+)
+@pytest.mark.slow
+def test_downloading_bad_url_types(url):
+    acct = Record.new()
+    with pytest.raises(ValueError):
+        Image.new(acct, url, allow_gif=True)
 
 
 @pytest.mark.parametrize('file', 
@@ -69,9 +83,10 @@ def test_downloading_bad_urls(url):
 def test_set(file):
     # Test setcover and setavatar methods
     with file.open('rb') as f:
-        obj = next(Image.new(Record.new(), [f], allow_gif=file.suffix == '.gif'))
-    obj.setavatar()
-    obj.setcover()
+        new = Image.new(Record.new(), f, allow_gif=file.suffix == '.gif')
+    reload = Image(id=new.id, load_file=True)
+    reload.setavatar()
+    reload.setcover()
 
 
 def test_class():

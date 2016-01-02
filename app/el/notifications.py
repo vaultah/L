@@ -9,6 +9,7 @@ from jinja2 import Template
 from jinja2.filters import do_striptags as striptags
 from string import ascii_uppercase, ascii_lowercase
 import threading
+from fused import fields
 
 _types = [
     'mention',
@@ -29,26 +30,8 @@ _mtrans = str.maketrans({u: '_' + l for u, l in
 def _lower_under(clsname):
     return clsname.translate(_mtrans).lstrip('_')
 
+
 class Notification(abc.Item):
-
-    ''' This class is different from Post and Image in both purpose
-        and implementation. '''
-
-    def __init__(self, notification=None):
-        self._fields = {}
-        self.params = {}
-        if notification:
-            notification = ObjectId(notification)
-            data = not_collection.find_one({self.pk: notification}) or {}
-            self._init_setfields(self, data)
-
-    def _prepare(self):
-        if self.owner and not isinstance(self.owner, Record):
-            self._setfields(self, {'owner': Record(id=self.owner)})
-
-        if self._type_map:
-            for field, init in self._type_map.items():
-                self.params[field] = init(getattr(self, field))
 
     def get_html(self, tpl):
         if not isinstance(tpl, Template):
@@ -67,8 +50,8 @@ class Notification(abc.Item):
         if not isinstance(acct, Record):
             raise TypeError
         doc = {'owner': acct.id}
-        if getattr(cls, '_ntype', None) is not None:
-            doc['type'] = cls._ntype
+        if getattr(cls, 'type', None) is not None:
+            doc['type'] = cls.type
         doc.update(ka)
         for field, value in ka.items():
             if isinstance(value, abc.Pkeyed):
@@ -81,8 +64,8 @@ class Notification(abc.Item):
         if not isinstance(acct, Record):
             raise TypeError
         filt = {'owner': acct.id}
-        if getattr(cls, '_ntype', None) is not None:
-            filt['type'] = cls._ntype
+        if getattr(cls, 'type', None) is not None:
+            filt['type'] = cls.type
         not_collection.delete_many(filt)
         
     @classmethod
@@ -96,68 +79,51 @@ class Notification(abc.Item):
         # Make a list excluding not `acct`'s images
         valid = [x for x in ins if x.owner == acct]
         filt = {'owner': acct.id, cls.pk: {'$in': [x.id for x in valid]}}
-        if getattr(cls, '_ntype', None) is not None:
-            filt['type'] = cls._ntype
+        if getattr(cls, 'type', None) is not None:
+            filt['type'] = cls.type
         not_collection.delete_many(filt)
-
-    def __repr__(self):
-        return ''
 
 
 class MentionNotification(Notification):
-    _type_map = {
-        'other': lambda x: Record(id=x),
-        'post': posts.Post
-    }
-    _ntype = NTYPES.mention
+    other = fields.Foreign(Record)
+    post = fields.Foreign(posts.Post)
+    type = NTYPES.mention
 
 
 class ReplyPostNotification(Notification):
-    _type_map = {
-        'other': lambda x: Record(id=x),
-        'post': posts.Post
-    }
-    _ntype = NTYPES.post_reply
+    other = fields.Foreign(Record)
+    post = fields.Foreign(posts.Post)
+    type = NTYPES.post_reply
 
 
 class ReplyImageNotification(Notification):
-    _type_map = {
-        'other': lambda x: Record(id=x),
-        'image': images.Image
-    }
-    _ntype = NTYPES.image_reply
+    other = fields.Foreign(Record)
+    image = fields.Foreign(images.Image)
+    type = NTYPES.image_reply
 
 
 class SharedPostNotification(Notification):
-    _type_map = {
-        'other': lambda x: Record(id=x),
-        'post': posts.Post
-    }
-    _ntype = NTYPES.post_share
+    other = fields.Foreign(Record)
+    post = fields.Foreign(posts.Post)
+    type = NTYPES.post_share
     
 class SharedImageNotification(Notification):
-    _type_map = {
-        'other': lambda x: Record(id=x),
-        'image': images.Image
-    }
-    _ntype = NTYPES.image_share
+    other = fields.Foreign(Record)
+    image = fields.Foreign(images.Image)
+    type = NTYPES.image_share
 
 
 class FriendNotification(Notification):
-    _type_map = {
-        'other': lambda x: Record(id=x),
-    }
-    _ntype = NTYPES.friend
+    other = fields.Foreign(Record)
+    type = NTYPES.friend
 
 
 class FollowerNotification(Notification):
-    _type_map = {
-        'other': lambda x: Record(id=x),
-    }
-    _ntype = NTYPES.follower
+    other = fields.Foreign(Record)
+    type = NTYPES.follower
 
 
-_ntypes_map = {x._ntype: x for x in Notification.__subclasses__()}
+types_map = {x.type: x for x in Notification.__subclasses__()}
 
 
 def load(acct, ntype=None, only_unread=True):
@@ -169,7 +135,7 @@ def load(acct, ntype=None, only_unread=True):
         if ntype is not None:
             filt['type'] = ntype
         it = not_collection.find(filt)
-        yield from (_ntypes_map[x['type']].fromdata(x) for x in it)
+        yield from (types_map[x['type']].fromdata(x) for x in it)
     else:
         # TODO
         return
@@ -180,7 +146,7 @@ def emit_item(item, tpl, types=None):
         raise TypeError
 
     if types is None:
-        types = iter(_ntypes_map.values())
+        types = iter(types_map.values())
 
     for t in types:
         if not isinstance(item, posts.Post):

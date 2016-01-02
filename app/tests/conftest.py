@@ -108,20 +108,20 @@ def patch_new_record():
         yield Record
 
 
-@pytest.yield_fixture(autouse=True, scope='session')
-def patch_new_post(patch_new_record):
-    def _decorate(func):
-        def wrapper(*a, **ka):
-            args = signature(func).bind_partial(*a, **ka).arguments
-            if 'poster' not in args:
-                args['poster'] = Record.new()
-            if 'content' not in args:
-                args['content'] = '<string>'
-            return func(**args)
-        return wrapper
+# @pytest.yield_fixture(autouse=True, scope='session')
+# def patch_new_post(patch_new_record):
+#     def _decorate(func):
+#         def wrapper(*a, **ka):
+#             args = signature(func).bind_partial(*a, **ka).arguments
+#             if 'poster' not in args:
+#                 args['poster'] = Record.new()
+#             if 'content' not in args:
+#                 args['content'] = '<string>'
+#             return func(**args)
+#         return wrapper
 
-    with patch.object(Post, 'new', _decorate(Post.new)):
-        yield Post
+#     with patch.object(Post, 'new', _decorate(Post.new)):
+#         yield Post
 
 
 @pytest.yield_fixture(autouse=True, scope='session')
@@ -132,8 +132,8 @@ def patch_new_image(request, patch_new_record):
             args = signature(func).bind_partial(*a, **ka).arguments
             if 'acct' not in args:
                 args['acct'] = Record.new()
-            if 'images' not in args:
-                args['images'] = [next(opened)]
+            if 'image' not in args:
+                args['image'] = next(opened)
             return func(**args)
         return wrapper
 

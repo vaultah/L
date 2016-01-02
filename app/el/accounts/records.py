@@ -2,7 +2,6 @@ from ... import consts
 from ..misc import abc, utils
 import collections
 from fused import fields
-from .. import posts
 
 
 class Record(abc.Item):
@@ -11,5 +10,8 @@ class Record(abc.Item):
     email = fields.String(unique=True)
     real_name = fields.String()
     fixed_post = fields.Foreign('Post')
-
-
+    images = fields.SortedSet()
+    posts = fields.SortedSet()
+    followers = fields.SortedSet()
+    following = fields.SortedSet()
+    friends = fields.SortedSet()

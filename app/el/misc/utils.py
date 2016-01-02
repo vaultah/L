@@ -12,6 +12,18 @@ from ... import consts
 from pathlib import PurePath
 
 
+class keep_file_position:
+
+    def __init__(self, file):
+        self.file = file
+
+    def __enter__(self):
+        self.position = self.file.tell()
+
+    def __exit__(self, *a):
+        self.position = self.file.seek(self.position)
+
+
 def image_url(**ka):
     defs = {'schema': 'http',
             'domain': consts.ext.MEDIA_HOST,

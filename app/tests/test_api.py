@@ -4,8 +4,8 @@ from uuid import uuid4
 from contextlib import ExitStack
 from pathlib import Path
 from operator import attrgetter
-from app.el.images import Image, raw as load_raw
-from app.el.posts import Post, page
+from app.el.images import Image
+from app.el.posts import Post
 from app.el import notifications
 from app.el.accounts.records import Record
 from app.el.accounts import auth
@@ -13,7 +13,7 @@ from app.app import application as _application
 
 application = webtest.TestApp(_application)
 files = Path(__file__).parent / 'images'
-
+ 
 
 @pytest.fixture(scope='function')
 def api_authed():
@@ -309,41 +309,6 @@ class TestNotifications:
         assert req.json['success'], req.json
         
         assert not list(notifications.load(api_authed))
-
-
-@pytest.mark.api
-@pytest.mark.integration
-class TestRatings:
-
-    def setup_method(self, method):
-        application.reset()
-
-    teardown_method = setup_method
-
-    @pytest.mark.parametrize('act',
-        [('upvote', 1), ('downvote', -1), ('unvote', 0)],
-        ids=['upvote', 'downvote', 'unvote']
-    )
-    @pytest.mark.parametrize('item_type',
-        [Image, Post],
-        ids=['image', 'post']
-    )
-    def test_put(self, api_authed, item_type, act):
-        action, change = act
-        item = item_type.new(api_authed)
-        # Won't fail for Image
-        try:
-            item = next(item)
-        except TypeError:
-            pass
-
-        path = '/api/02/ratings/{}?{}={}'.format(
-                action, 'post' if isinstance(item, Post) else 'image', item.id)
-        req = application.put_json(path)
-        assert req.status_int == 200
-        ri = item_type(item.id)
-        assert req.json['success'], req.json
-        assert ri.score - item.score == change
 
 
 @pytest.mark.api
