@@ -44,7 +44,7 @@ def pytest_addoption(parser):
     parser.addoption('--no-urls', action='store_true', default=False,
                      help='Do not test downloading from urls')
     parser.addoption('--send-to', action='store', help='Send mail to this address',
-                     default='flwaultah@gmail.com') 
+                     default='1846777133@mailinator.com') 
 
 
 @pytest.fixture(autouse=True)
