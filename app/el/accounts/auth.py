@@ -89,7 +89,6 @@ class ResetKey(abc.Item):
 
     @classmethod
     def new_from_unique(cls, name=None, email=None, account=None, **ka):
-        # TODO: Optimize
         if account is not None:
             ka['account'] = account
         elif name is not None:
@@ -98,7 +97,6 @@ class ResetKey(abc.Item):
             ka['account'] = Record(email=email)
         else:
             raise ValueError
-        ka['account'] = ka['account'].id
         return cls.new(**ka)
 
     @classmethod

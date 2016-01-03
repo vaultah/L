@@ -11,13 +11,13 @@ import collections.abc
 import threading
 # For PUSH post loading purposes
 import jinja2
+from fused import fields
 
 
 class Post(abc.Item):
     type = consts.CONTENT_POST
     owner = fields.Foreign(records.Record, required=True)
     content = fields.String()
-    base =  fields.
 
     def is_reply(self):
         return self.base and (self.content or self.images)
