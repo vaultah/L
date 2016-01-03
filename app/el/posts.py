@@ -13,41 +13,35 @@ import threading
 import jinja2
 
 
-def _post_link(id):
-    return '/survey/post/{}'.format(id)
-
 class Post(abc.Item):
     type = consts.CONTENT_POST
+    owner = fields.Foreign(records.Record, required=True)
+    content = fields.String()
+    base =  fields.
 
     def is_reply(self):
         return self.base and (self.content or self.images)
 
-    @classmethod
-    def delete(cls, acct, posts):
-        ''' Most of deleting actions are delayed (e.g. `delete_derived` in
-            `branch`); this method makes as little changes as possible '''
-        if not isinstance(acct, records.Record):
-            raise TypeError
+    # @classmethod
+    # def delete(cls, acct, posts):
+    #     ''' Most of deleting actions are delayed (e.g. `delete_derived` in
+    #         `branch`); this method makes as little changes as possible '''
+    #     if not isinstance(acct, records.Record):
+    #         raise TypeError
 
-        if not posts:
-            raise ValueError('Nothing to delete')
+    #     if not posts:
+    #         raise ValueError('Nothing to delete')
 
-        ins = list(cls.instances(posts))
-        # Make a list excluding the posts not belonging to `acct`
-        valid = [x for x in ins if x.owner == acct]
-
-        threading.Thread(target=Feed.delete, kwargs={'posts': ins},
-                         daemon=True).start()
-
-        with acct:
-            op = cls.collection.delete_many({cls.pk: {'$in': [x.id for x in valid]}})
-            acct.posts -= op.deleted_count
+    #     ins = list(cls.instances(posts))
+    #     # Make a list excluding the posts not belonging to `acct`
+    #     valid = [x for x in ins if x.owner == acct]
+    #     super
+    #     threading.Thread(target=Feed.delete, kwargs={'posts': ins},
+    #                      daemon=True).start()
 
     @classmethod
-    def new(cls, poster, content=None, ext=None, images=None, feed=True):
-        if (not (ext and ext.good()) and
-            not (content and not content.isspace()) and 
-            not images):
+    def new(cls, feed=True, **ka):
+        if not any([ext and ext.good, content and not content.isspace(), images]):
             raise ValueError('Post is empty')
 
         if not isinstance(poster, records.Record):
@@ -72,25 +66,6 @@ class Post(abc.Item):
                 'content': content if content or images else None,
                 'base': ext or None,
                 'score': 0}
-
-        data['id'], data['hash'] = utils.unique_id()
-
-        # Don't write `None` fields to a document
-        data = {x: y for x, y in data.items() if y is not None}
-        cls.collection.insert_one(data)
-        with poster:
-            poster.posts += 1
-        data['owner'] = poster
-        
-        # Create the post instance from the dictionary
-        instance = cls.fromdata(data)
-
-        # if feed:
-        #     ids = (poster,) + relations.feedgetters(poster)
-        #     th = threading.Thread(target=Feed.new, args=(instance, ids), daemon=True)
-        #     th.start()
-
-        return instance
 
 class Feed:
 

@@ -104,25 +104,13 @@ class Image(abc.Item):
 
         return name
 
-    @classmethod
-    def delete(cls, acct, images):
-        if not isinstance(acct, records.Record):
-            raise TypeError
-
-        if not images:
-            raise ValueError('Nothing to delete')
-
-        ins = cls.instances(images)
-        # Make a list excluding not `acct`'s images
-        valid = [x for x in ins if x.owner == acct]
-
-        for name in (x.name for x in valid):
-            for file in consts.MEDIA_IMAGES.glob('*-' + name):
-                file.unlink()
-
-        with acct:
-            op = cls.collection.delete_many({cls.pk: {'$in': [x.id for x in valid]}})
-            acct.images -= op.deleted_count
+    def delete(self):
+        name = self.name
+        super().delete()
+        for file in consts.MEDIA_IMAGES.glob('*-' + name):
+            file.unlink()
+            
+        # acct.delete_images(images)
 
     @classmethod
     def new(cls, acct, image, allow_gif=False):        
