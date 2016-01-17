@@ -56,9 +56,6 @@ docs/_build/
 # PyBuilder
 target/
 
-# L's media directory
-L-media/
-
 # Nodejs stuff
 
 # Logs
