@@ -41,37 +41,42 @@ def test_context_updating():
     assert reloaded.images.zcard() == 1
     assert reloaded.posts.zcard() == 2
 
-    # FIXME:
-    # # Test field removal
-    # with reloaded:
-    #     reloaded.real_name = None
+    # Test field removal
+    with reloaded:
+        del reloaded.real_name
+        del reloaded.posts
 
-    # # Reload again and check their absence
-    # reloaded = records.Record(id=reloaded.id)
-    # assert 'real_name' not in reloaded.as_dict()
-    # assert reloaded.real_name is None
-    # assert 'posts' in reloaded.as_dict()
-    # assert reloaded.posts == 0
+    assert reloaded.real_name is None
+    # Reload again and check their absence
+    reloaded = records.Record(id=reloaded.id)
+    assert 'real_name' not in reloaded.as_dict()
+    assert reloaded.real_name is None
+    assert reloaded.posts.zcard() == 0
 
+    # TODO:
     # # pwd is not a public field
     # assert 'pwd' not in reloaded.as_public_dict()
 
 
-def test_accounts_loading():
-    # No `start` and default limit
-    accts = [records.Record.new() for _ in range(2)]
-    res = list(records.number())
-    assert all(isinstance(x, records.Record) for x in res)
-    assert len(res) >= len(accts)
-    # `start` and default limit
-    res = list(records.number(start=min(accts, key=attrgetter('id'))))
-    assert all(isinstance(x, records.Record) for x in res)
-    assert len(res) >= len(accts)
-    # There's no point to test `limit` param specifically
+def test_compound():
+    rec = records.Record.new()
+    singular = ('image', 'post', 'follower', 'following',
+                'friend', 'notification')
+    plural = ('images', 'posts', 'followers', 'following',
+              'friends', 'notifications')
 
+    for x in singular:
+        getattr(rec, 'add_' + x)('A')
 
-def test_count():
-    old = records.total()
-    # Dummy account
-    records.Record.new()
-    assert records.total() - old == 1
+    for x in plural:
+        res = list(getattr(rec, 'get_' + x)())
+        assert len(res) == 1, res
+        assert res == ['A'], res
+
+    for x in singular:
+        getattr(rec, 'delete_' + x)('A')
+
+    for x in plural:
+        res = list(getattr(rec, 'get_' + x)())
+        assert not res, res
+        assert res == [], res

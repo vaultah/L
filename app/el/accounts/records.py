@@ -1,21 +1,8 @@
 from ... import consts
 from ..misc import abc, utils
-import collections
 import time
 from fused import fields
 from functools import partialmethod
-
-
-def add(model, field, value, score=None):
-    if score is None:
-        score = time.time()
-    encoded = model.encode(fields.PrimaryKey, value)
-    return getattr(model, field).zadd(score, encoded)
-
-
-def delete(model, field, value):
-    encoded = model.encode(fields.PrimaryKey, value)
-    return getattr(model, field).zrem(encoded)
 
 
 class Record(abc.Item):
@@ -33,21 +20,41 @@ class Record(abc.Item):
     friends = fields.SortedSet(standalone=True)
     notifications = fields.SortedSet(standalone=True)
 
+    def _add(self, field, value, score=None):
+        if score is None:
+            score = time.time()
+        encoded = self.encode(fields.PrimaryKey, value)
+        return getattr(self, field).zadd(score, encoded)
+
+    def _delete(self, field, value):
+        encoded = self.encode(fields.PrimaryKey, value)
+        return getattr(self, field).zrem(encoded)
+
+    def _get(self, field, min='-inf', max='+inf', **ka):
+        raw = getattr(self, field).zrangebyscore(min, max, **ka)
+        yield from (self.decode(fields.PrimaryKey, x) for x in raw)
+
     # Common ops for above sorted sets
-    add_image = partialmethod(add, 'images')
-    delete_image = partialmethod(delete, 'images')
+    add_image = partialmethod(_add, 'images')
+    delete_image = partialmethod(_delete, 'images')
+    get_images = partialmethod(_get, 'images')
 
-    add_post = partialmethod(add, 'posts')
-    delete_post = partialmethod(delete, 'posts')
+    add_post = partialmethod(_add, 'posts')
+    delete_post = partialmethod(_delete, 'posts')
+    get_posts = partialmethod(_get, 'posts')
 
-    add_follower = partialmethod(add, 'followers')
-    delete_follower = partialmethod(delete, 'followers')
+    add_follower = partialmethod(_add, 'followers')
+    delete_follower = partialmethod(_delete, 'followers')
+    get_followers = partialmethod(_get, 'followers')
 
-    add_following = partialmethod(add, 'following')
-    delete_following = partialmethod(delete, 'following')
+    add_following = partialmethod(_add, 'following')
+    delete_following = partialmethod(_delete, 'following')
+    get_following = partialmethod(_get, 'following')
 
-    add_friend = partialmethod(add, 'friends')
-    delete_friend = partialmethod(delete, 'friends')
+    add_friend = partialmethod(_add, 'friends')
+    delete_friend = partialmethod(_delete, 'friends')
+    get_friends = partialmethod(_get, 'friends')
 
-    add_notification = partialmethod(add, 'notifications')
-    delete_notification = partialmethod(delete, 'notifications')
+    add_notification = partialmethod(_add, 'notifications')
+    delete_notification = partialmethod(_delete, 'notifications')
+    get_notifications = partialmethod(_get, 'notifications')
