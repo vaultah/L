@@ -1,6 +1,4 @@
 {
-  "name": "L",
-  "version": "0.0.1",
   "devDependencies": {
     "gulp": "^3.9.0",
     "gulp-babel": "^5.2.1",
@@ -12,18 +10,5 @@
     "gulp-sourcemaps": "^1.6.0",
     "gulp-uglify": "^1.4.2"
   },
-  "main": "gulpfile.js",
-  "dependencies": {},
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/vaultah/L.git"
-  },
-  "author": "vaultah",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/vaultah/L/issues"
-  }
+  "main": "gulpfile.js"
 }
