@@ -12,6 +12,7 @@ class Record(abc.Item):
     email = fields.String(unique=True)
     real_name = fields.String() 
     fixed_post = fields.Foreign('Post')
+    avatar = fields.Foreign('Image')
     # Sorted sets of primary keys
     images = fields.SortedSet(standalone=True)
     posts = fields.SortedSet(standalone=True)
