@@ -19,6 +19,7 @@ class Image(abc.Item):
     type = consts.CONTENT_IMAGE
     owner = fields.Foreign(records.Record, required=True)
     name = fields.String(required=True)
+    derived = fields.SortedSet(standalone=True)
 
     def __init__(self, load_file=False, **ka):
         super().__init__(**ka)
@@ -44,6 +45,10 @@ class Image(abc.Item):
             url = 'http://{}'.format(url)
 
         return io.BytesIO(urllib.request.urlopen(url, timeout=10).read())
+        
+    def get_derived(self):
+        raw = self.derived.zrange(0, -1)
+        yield from (self.decode(fields.PrimaryKey, x) for x in raw)
 
     def setavatar(self):
         ''' `Image.setavatar` (as well as `Image.setcover`) performs only file IO 

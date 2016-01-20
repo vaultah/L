@@ -93,7 +93,7 @@ def test_load_derived():
     assert len(levels) - 1 == len(derived)
     assert all(len(level) == 1 for level in levels[1:])
     # With shared
-    levels = list(posts.derived(bases[0], reflections=True))
+    levels = list(posts.derived(bases[0], shared=True))
     assert all(len(level) == 2 for level in levels[1:])
     assert levels[1:] == derived
     # Testing level_info here
@@ -101,12 +101,12 @@ def test_load_derived():
     assert res
 
 
-def test_delete_derived():
+def test_delete_tree():
     bases = [posts.Post.new()]
     owner = bases[-1].owner
     for _ in range(5):
         reply = posts.Post.new(owner, content='<string>', ext=bases[-1])
         bases.append(reply)
 
-    posts.delete_derived(bases[0])
+    posts.delete_tree(bases[0])
     assert all(not posts.Post(x.id).good() for x in bases)

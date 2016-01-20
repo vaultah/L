@@ -22,16 +22,28 @@ class Record(abc.Item):
     notifications = fields.SortedSet(standalone=True)
 
     def _add(self, field, value, score=None):
+        try:
+            value = value.primary_key
+        except AttributeError:
+            pass
         if score is None:
             score = time.time()
         encoded = self.encode(fields.PrimaryKey, value)
         return getattr(self, field).zadd(score, encoded)
 
     def _delete(self, field, value):
+        try:
+            value = value.primary_key
+        except AttributeError:
+            pass
         encoded = self.encode(fields.PrimaryKey, value)
         return getattr(self, field).zrem(encoded)
 
     def _get(self, field, min='-inf', max='+inf', **ka):
+        try:
+            value = value.primary_key
+        except AttributeError:
+            pass
         raw = getattr(self, field).zrangebyscore(min, max, **ka)
         yield from (self.decode(fields.PrimaryKey, x) for x in raw)
 

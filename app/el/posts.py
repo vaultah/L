@@ -5,7 +5,7 @@ from .. import consts
 from .misc import abc, utils
 from .images import Image
 from datetime import datetime
-import itertools
+from itertools import chain
 from collections import ChainMap, deque
 import collections.abc
 import threading
@@ -18,13 +18,24 @@ class Post(abc.Item):
     type = consts.CONTENT_POST
     owner = fields.Foreign(records.Record, required=True)
     content = fields.String()
+    base_post = fields.Foreign('Post')
+    base_image = fields.Foreign('Image')
+    derived = fields.SortedSet(standalone=True)
+
+    @property
+    def base(self):
+        return self.base_post or self.base_image
 
     def is_reply(self):
         return self.base and (self.content or self.images)
 
+    def get_derived(self):
+        raw = self.derived.zrange(0, -1)
+        yield from (self.decode(fields.PrimaryKey, x) for x in raw)
+
     # @classmethod
     # def delete(cls, acct, posts):
-    #     ''' Most of deleting actions are delayed (e.g. `delete_derived` in
+    #     ''' Most of deleting actions are delayed (e.g. `delete_tree` in
     #         `branch`); this method makes as little changes as possible '''
     #     if not isinstance(acct, records.Record):
     #         raise TypeError
@@ -87,6 +98,7 @@ class Feed:
 
     @classmethod
     def delete(cls, posts=(), ids=()):
+        
         spec = {}
         if posts:
             try:
@@ -129,6 +141,10 @@ class Feed:
 # FIXME: New followers/friends -> feedgetters
 
 
+
+
+
+
 def push(post, tpl, **ka):
     # Doing the real push here
     if not isinstance(tpl, jinja2.Template):
@@ -147,57 +163,35 @@ def push(post, tpl, **ka):
              'markup': tpl.render(ka)},)
     threading.Thread(target=wsinter.async_send, args=args, daemon=True).start()
 
-def derived(item, reflections=False):
+
+def derived(item, shared=False):
     if not item.good():
-        raise ValueError('The post does not exists')
-    # Refillable list of replies of any type
+        raise ValueError('The post/image does not exist')
     replies = [item]
-    # Common selectors
-    spec = ChainMap({})
-
     while replies:
-        temp, bases = [], [[x.id, x.type] for x in replies]
-        derivations = {(x.id, x.type): x.derived for x in replies}
-        kw = {'filter': spec.new_child({'base': {'$in': bases}}),
-              'cursor_type': CursorType.EXHAUST}
- 
-        # Applies to posts only
-        if not reflections:
-            kw['filter'] = kw['filter'].new_child({'$or': [
-                {'content': {'$exists': True}},
-                {'images': {'$exists': True}}
-            ]})
-
-        kw['filter'] = dict(kw['filter'])
-
-        for document in Post.collection.find(**kw):
-            v = Post.fromdata(document)
-            derivations[tuple(v.base)].append(v)
-            temp.append(v)
-
         yield replies
+        derived = chain.from_iterable(x.get_derived() for x in replies)
+        replies = [x for x in Post.instances(derived)
+                     if x.good() and (shared or x.is_reply())]
 
-        replies = temp
 
-
-def delete_derived(item):
-    ''' Delete replies and reflections '''
-    chained = itertools.chain(*derived(item, reflections=True))
-    # Technically, it would be correct to remove the first element
-    # because "item is next(chained)", but I'll advance the iterator and
-    # free item.derived at the same time
-    Post.collection.delete_many({Post.pk: {'$in': [x.id for x in chained]}})
+def delete_tree(item):
+    ''' Delete replies and shared items '''
+    for x in chain(*derived(item, shared=True)):
+        # TODO: x.owner.good()?
+        x.owner.delete_post(x)
+        x.delete()
 
     
 def parents(item):
     # Can't evaluate lazily, will be generator anyway
     if not item.good():
-        raise ValueError('The post/image does not exists')
+        raise ValueError('The post/image does not exist')
 
     items = [item]
     while True:
         if not items[-1].good():
-            delete_derived(items[-2])
+            delete_tree(items[-2])
             items[:] = []
             break
 
