@@ -1,4 +1,4 @@
-from . import  wsinter
+from . import  ws
 from .accounts.profile import profile
 from .accounts import relations, records
 from .. import consts
@@ -156,12 +156,12 @@ def push(post, tpl, **ka):
     # Render the template for current
     args = ({'action': 'feed', 'ids': (post.owner.id,), 
              'markup': tpl.render(ka)},)
-    threading.Thread(target=wsinter.async_send, args=args, daemon=True).start()
+    threading.Thread(target=ws.async_send, args=args, daemon=True).start()
     # Render the template for others
     ka['push'] = True
     args = ({'action': 'feed', 'ids': relations.feedgetters(post.owner),
              'markup': tpl.render(ka)},)
-    threading.Thread(target=wsinter.async_send, args=args, daemon=True).start()
+    threading.Thread(target=ws.async_send, args=args, daemon=True).start()
 
 
 def derived(item, shared=False):

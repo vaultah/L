@@ -176,7 +176,7 @@ def emit_item(item, tpl, types=None):
 
             # # TODO: Notification params?
             # args = ({'action': 'notification', 'notification': str(obj), 'ids': ids},)
-            # threading.Thread(target=wsinter.async_send, args=args, daemon=True).start()
+            # threading.Thread(target=ws.async_send, args=args, daemon=True).start()
 
 
 def emit_relations():
