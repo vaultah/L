@@ -33,22 +33,19 @@ class Post(abc.Item):
         raw = self.derived.zrange(0, -1)
         yield from (self.decode(fields.PrimaryKey, x) for x in raw)
 
-    # @classmethod
-    # def delete(cls, acct, posts):
-    #     ''' Most of deleting actions are delayed (e.g. `delete_tree` in
-    #         `branch`); this method makes as little changes as possible '''
-    #     if not isinstance(acct, records.Record):
-    #         raise TypeError
+    def _delete_descendants(self):
+        desc = [x for lvl in descendants(self, shared=True) for x in lvl]
+        desc.pop(0)
+        threading.Thread(target=Feed.delete, kwargs={'posts': [self, *desc]},
+                         daemon=True).start()
+        for x in dsc:
+            x.delete(descendants=False)
 
-    #     if not posts:
-    #         raise ValueError('Nothing to delete')
+    def delete(self, descendants=True):
+        if descendants:
+            self._delete_descendants(self)
 
-    #     ins = list(cls.instances(posts))
-    #     # Make a list excluding the posts not belonging to `acct`
-    #     valid = [x for x in ins if x.owner == acct]
-    #     super
-    #     threading.Thread(target=Feed.delete, kwargs={'posts': ins},
-    #                      daemon=True).start()
+        return super().__delete__()
 
     @classmethod
     def new(cls, feed=True, **ka):
@@ -141,10 +138,6 @@ class Feed:
 # FIXME: New followers/friends -> feedgetters
 
 
-
-
-
-
 def push(post, tpl, **ka):
     # Doing the real push here
     if not isinstance(tpl, jinja2.Template):
@@ -164,20 +157,20 @@ def push(post, tpl, **ka):
     threading.Thread(target=ws.async_send, args=args, daemon=True).start()
 
 
-def derived(item, shared=False):
+def descendants(item, shared=False):
     if not item.good():
         raise ValueError('The post/image does not exist')
     replies = [item]
     while replies:
         yield replies
-        derived = chain.from_iterable(x.get_derived() for x in replies)
-        replies = [x for x in Post.instances(derived)
+        desc = chain.from_iterable(x.get_derived() for x in replies)
+        replies = [x for x in Post.instances(desc)
                      if x.good() and (shared or x.is_reply())]
 
 
 def delete_tree(item):
     ''' Delete replies and shared items '''
-    for x in chain(*derived(item, shared=True)):
+    for x in chain(*descendants(item, shared=True)):
         # TODO: x.owner.good()?
         x.owner.delete_post(x)
         x.delete()
