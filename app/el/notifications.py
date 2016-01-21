@@ -163,7 +163,7 @@ def emit_item(item, tpl, types=None):
             if t not in _shared | _replied:
                 continue
 
-            base = list(posts.parents(item))[-2]
+            base = list(posts.ancestors(item))[-2]
 
             if t is SharedPostNotification and isinstance(base, posts.Post):
                 t.new(base.owner, post=base, other=item.owner)

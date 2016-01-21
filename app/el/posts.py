@@ -167,16 +167,8 @@ def descendants(item, shared=False):
         replies = [x for x in Post.instances(desc)
                      if x.good() and (shared or x.is_reply())]
 
-
-def delete_tree(item):
-    ''' Delete replies and shared items '''
-    for x in chain(*descendants(item, shared=True)):
-        # TODO: x.owner.good()?
-        x.owner.delete_post(x)
-        x.delete()
-
     
-def parents(item):
+def ancestors(item):
     # Can't evaluate lazily, will be generator anyway
     if not item.good():
         raise ValueError('The post/image does not exist')
@@ -184,24 +176,18 @@ def parents(item):
     items = [item]
     while True:
         if not items[-1].good():
-            delete_tree(items[-2])
-            items[:] = []
+            items[-2].delete()
+            items.clear()
             break
 
-        if not items[-1].base:
-            break
-
-        if items[-1].base[-1] == Post.type:
-            obj = Post(items[-1].base[0])
+        if items[-1].base:
+            items.append(item[-1].base)
         else:
-            obj = Image(items[-1].base[0])
-
-        items.append(obj)
+            break
 
     # Output as 
-    #   base -> first order reply -> ... -> `item`
-    items.reverse()
-    yield from items
+    #   OP -> first order reply -> ... -> `item`
+    yield from reversed(items)
 
 
 def level_info(levels):
