@@ -11,6 +11,8 @@ This is a project I was using to improve my programming skills and learn new sof
 
 After 4 years of active development, it become apparent that L has no future. In addition to that, I made some bad design choices I don't have enough time/energy to fix. I've lost my motivation and enthusiasm, and I decided to drop it.
 
+The Python code in L works fine, but browser-side code is a disaster. It's awful and it doesn't even work properly.
+
 ##Timeline:
 
 - I began learning PHP using [Robin Nixon's book](http://lpmj.net/4thedition). The last example (a very simple social network) became the base of this project
