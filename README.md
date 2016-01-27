@@ -9,9 +9,30 @@ This project is distributed with some other open-source components, see [credits
 
 This is a project I was using to improve my programming skills and learn new software. The idea was to create an open-source social network.
 
-After 4 years I realized that L has no future. In addition to that, I made some bad design choices I don't have enough time/energy to fix. I've lost my motivation and enthusiasm, and I decided that I'd drop it.
+After 4 years of active development, it become apparent that L has no future. In addition to that, I made some bad design choices I don't have enough time/energy to fix. I've lost my motivation and enthusiasm, and I decided to drop it.
 
-Here's how it looked:
+##Timeline:
+
+- I began learning PHP using [Robin Nixon's book](http://lpmj.net/4thedition). The last example (a very simple social network) became the base of this project
+- Replaced old `mysqli` code with PDO
+- Came up with a design
+- I learned about the MVC pattern, created my own incredibly simple MVC framework and integrated it into the project
+- I discovered Python and reimplemented the project in Python 3 (Bottle framework)
+- I started learning NodeJS and created a basic server for push notifications
+- Switched from MySQL to MongoDB
+- Redesigned the project completely
+- Started using a VCS
+- Reimplemented the push server in Python
+- Started developing a basic search engine in C++ (old source code can be found [here](https://github.com/vaultah/hasty/tree/fd19f4620d238ad350a9352fc68e82c60012c415))
+- Part of browser-side JS code was rewritten in ES6
+- Integrated Gulp, Babel, JSHint etc.
+- Decided to use Redis instead of MongoDB. Spent some time searching for a suitable ORM-like library, but gave up and built [Fused](https://github.com/vaultah/fused). Did not finish the actual conversion (`redis` branch)
+
+----------------------------
+
+
+
+Here's how it looked in the end
 
 
 ![](http://i.imgur.com/cAsKmBt.jpg)
@@ -19,6 +40,4 @@ Here's how it looked:
 ![](http://i.imgur.com/MowTcKu.png)
 
 ![](http://i.imgur.com/1aZOpRG.png)
-
-[Album on Imgur](http://imgur.com/a/KDq0F)
 
