@@ -5,7 +5,7 @@
 
 This project is distributed with some other open-source components, see [credits](CREDITS.md).
 
-***tl;dr*** This is a project I was using to improve my programming skills and learn new software. Please don't use this project to assess my web development skills. 
+***tl;dr*** This was a project I used to improve my programming skills and learn new software. Please don't use it to assess my web development skills. 
 
 ------------------
 
